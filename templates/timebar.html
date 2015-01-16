@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.axis text {
+  font: 10px sans-serif;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+#chart {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+
+#metadata {
+  position: fixed;
+  left: 10px;
+  top: 10px;
+  border: 1px solid black;
+  padding: 5px;
+}
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<div id="metadata"></div>
+<svg id="chart"></svg>
+<script>
+
+function type(d) { 
+    d.name = d3.time.format(tformat).parse(d.name)
+}
+
+var data = $JSON$;
+var values = data.values;
+var profile = data.profile;
+
+tformat = data.opts.format;
+tformatter = d3.time.format(tformat);
+timezone = data.opts.timezone;
+template = data.opts.template;
+intervalStr = data.opts.intervalStr;
+intervalLabel = data.opts.intervalLabel;
+
+filename = data["args"][0];
+
+html = filename + " | Timezone: " + timezone + " | Template: " + template + " | Interval: " + intervalLabel + "<br/>";
+html += profile.count + " tweets from " + profile.usercount + " users, including " + profile.retweetcount + " retweets (" + (profile.retweetcount / profile.count * 100).toFixed(2) + "%), "
+html += "and " + profile.geocount + " with geo (" + (profile.geocount / profile.count * 100).toFixed(2) + "%): "
+html += profile.earliest + " to " + profile.latest
+d3.select("#metadata").html(html);
+
+var vlen = values.length;
+for (var i = 0; i < vlen; i++) {
+    type(values[i]);
+}
+
+var margin = {top: 100, right: 100, bottom: 100, left: 100},
+    width = parseInt(d3.select("#chart").style("width")) - margin.left - margin.right,
+    height = parseInt(d3.select("#chart").style("height")) - margin.top - margin.bottom;
+
+var chart = d3.select("#chart")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var x = d3.time.scale()
+.domain([
+    d3.min(values, function(d) {return d.name}), 
+    d3.max(values, function(d) {return d.name})
+ ])
+.nice(d3.time.day)
+.range([0, width]);
+
+var y = d3.scale.linear()
+    .domain([0, d3.max(values, function(d) { return d.value; })])
+    .range([height, 0]);
+
+var timespan = x.invert(width) - x.invert(0) // time span of x, in milliseconds
+var interval = data.opts.interval; // interval of datapoints, in milliseconds
+var intervalCount = timespan / interval; // how many intervals in x
+var barWidth = width / intervalCount; // width of one interval, in pixels
+
+// x-axis
+chart.append("g")
+  .attr("class", "x axis")
+  .attr("transform", "translate(0," + height + ")")
+  .call(d3.svg.axis().scale(x).orient("bottom"))
+.append("text")
+  .attr("class", "label")
+  .attr("x", width)
+  .attr("y", 30)
+  .style("text-anchor", "end")
+  .text("date");
+    
+// y-axis
+chart.append("g")
+  .attr("class", "y axis")
+  .call(d3.svg.axis().scale(y).orient("left"))
+.append("text")
+  .attr("class", "label")
+  .attr("transform", "rotate(-90)")
+  .attr("y", -70)
+  .attr("dy", ".71em")
+  .style("text-anchor", "end")
+  .text("tweets");
+
+var bar = chart.selectAll(".bar")
+  .data(values)
+.enter().append("g")
+  .append("rect")
+  .attr("class", "bar")
+  .attr("x", function(d) { return x(d.name); })
+  .attr("width", barWidth)
+  .attr("y", function(d) { return y(d.value); })
+  .attr("height", function(d) { return height - y(d.value); })
+  .append("svg:title")
+  .text(function(d) { return tformatter(d.name) + ": " + d.value + " tweets"; });
+
+</script>
