@@ -33,7 +33,7 @@ def nodeslinks(threshold):
     
     print json.dump({"nodes": nodelist, "links": links})
 
-def nodeslinktrees(nodes, links, opts, args):
+def nodeslinktrees(profile, nodes, links, opts, args):
     # generate nodes json
     nodesoutput = []
     usernames = []
@@ -53,7 +53,7 @@ def nodeslinktrees(nodes, links, opts, args):
                     "target": usernames.index(source), 
                     "value": value})
 
-    return {"nodes": nodesoutput, "links": linksoutput, "opts": opts, "args": args}
+    return {"profile": profile, "nodes": nodesoutput, "links": linksoutput, "opts": opts, "args": args}
 
 def namevaluecsv(data):
     csvout = StringIO.StringIO()
