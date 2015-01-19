@@ -9,6 +9,10 @@ import optparse
 import fileinput
 import d3json # local module
 import ast
+from profiler import Profiler # local module
+from collections import Counter
+import dateutil.parser # $ pip install python-dateutil
+
 
 opt_parser = optparse.OptionParser()
 opt_parser.add_option("-m", "--mode", dest="mode", help="retweets (default) | mentions | replies",
@@ -28,28 +32,11 @@ opts, args = opt_parser.parse_args()
 optsdict = ast.literal_eval(str(opts))
 argsdict = ast.literal_eval(str(args))
 
-links = {}
-nodes = {}
-
-def addlink(source, target):
-    if not source in links:
-        links[source] = {}
-    if not source in nodes:
-        nodes[source] = {"source": 0, "target": 1}
-    else:
-        nodes[source]["target"] = nodes[source]["target"] + 1
-    userlink = links[source]
-    if target in userlink:
-        userlink[target] = userlink[target] + 1;
-    else:
-        userlink[target] = 1;
-    if target in nodes:
-        nodes[target]["source"] = nodes[target]["source"] + 1
-    else:
-        nodes[target] = {"source": 1, "target": 0}
-
-
-
+class DirectedProfiler(Profiler):
+    def __init__(self, opts):
+        Profiler.__init__(self, opts)
+        self.links = {}
+        self.nodes = {}
 # nodes will end up as ["userA", "userB", ...]
 # links will end up as 
 #    {
@@ -60,25 +47,56 @@ def addlink(source, target):
 #    
 # Meaning that userA mentions userB 3 times, and userB mentions userA once.
 
+    def addlink(self, source, target):
+        if not source in self.links:
+            self.links[source] = {}
+        if not source in self.nodes:
+            self.nodes[source] = {"source": 0, "target": 1}
+        else:
+            self.nodes[source]["target"] = self.nodes[source]["target"] + 1
+        userlink = self.links[source]
+        if target in userlink:
+            userlink[target] = userlink[target] + 1
+        else:
+            userlink[target] = 1
+        if target in self.nodes:
+            self.nodes[target]["source"] = self.nodes[target]["source"] + 1
+        else:
+            self.nodes[target] = {"source": 1, "target": 0}
+
+    def process(self, tweet):
+        Profiler.process(self, tweet)
+        user = tweet["user"]["screen_name"]
+        if self.mode == 'mentions':
+            if "user_mentions" in tweet["entities"]:
+                for mention in tweet["entities"]["user_mentions"]:
+                    self.addlink(user, str(mention["screen_name"]))
+        elif self.mode == 'replies':
+            if not(tweet["in_reply_to_screen_name"] == None):
+                self.addlink(tweet["in_reply_to_screen_name"], user)
+        else: # default mode: retweets
+            if "retweeted_status" in tweet:
+                self.addlink(user, tweet["retweeted_status"]["user"]["screen_name"])
+
+    def report(self):
+        profile = Profiler.report(self)
+        return {"profile": profile, "nodes": self.nodes, "links": self.links}
+
+profiler = DirectedProfiler({"mode": opts.mode})
 
 for line in fileinput.input(args):
     try:
         tweet = json.loads(line)
-        user = tweet["user"]["screen_name"]
-        if opts.mode == 'mentions':
-            if "user_mentions" in tweet["entities"]:
-                for mention in tweet["entities"]["user_mentions"]:
-                    addlink(user, str(mention["screen_name"]))
-        elif opts.mode == 'replies':
-            if not(tweet["in_reply_to_screen_name"] == None):
-                addlink(tweet["in_reply_to_screen_name"], user)
-        else: # default mode: retweets
-            if "retweeted_status" in tweet:
-                addlink(user, tweet["retweeted_status"]["user"]["screen_name"])
+        profiler.process(tweet)
     except ValueError as e:
         sys.stderr.write("uhoh: %s\n" % e)
 
-json = d3json.nodeslinktrees(nodes, links, optsdict, argsdict)
+data = profiler.report()
+profile = data["profile"]
+nodes = data["nodes"]
+links = data["links"]
+
+json = d3json.nodeslinktrees(profile, nodes, links, optsdict, argsdict)
 
 if opts.output == "json":
     print json
