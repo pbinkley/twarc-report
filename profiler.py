@@ -46,3 +46,44 @@ class Profiler:
             "earliest": local_earliest, 
             "latest": local_latest, 
             "usercount": len(self.users)}
+            
+            
+class LinkNodesProfiler(Profiler):
+    def __init__(self, opts):
+        Profiler.__init__(self, opts)
+        self.links = {}
+        self.nodes = {}
+# nodes will end up as ["userA", "userB", ...]
+# links will end up as 
+#    {
+#        "userA": {"userB": 3, ...},
+#        "userB": {"userA": 1, ...},
+#        ...
+#    }
+#    
+# Meaning that userA mentions userB 3 times, and userB mentions userA once.
+
+    def addlink(self, source, target):
+        if not source in self.links:
+            self.links[source] = {}
+            
+        if not source in self.nodes:
+            self.nodes[source] = {"source": 0, "target": 1}
+        else:
+            self.nodes[source]["target"] += 1
+
+        linklist = self.links[source]
+        if target in linklist:
+            linklist[target] += 1
+        else:
+            linklist[target] = 1
+
+        if target in self.nodes:
+            self.nodes[target]["source"] += 1
+        else:
+            self.nodes[target] = {"source": 1, "target": 0}
+
+    def report(self):
+        profile = Profiler.report(self)
+        return {"profile": profile, "nodes": self.nodes, "links": self.links}
+            

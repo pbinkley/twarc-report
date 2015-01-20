@@ -10,6 +10,7 @@ import fileinput
 import d3json # local module
 import ast
 from profiler import Profiler # local module
+from profiler import LinkNodesProfiler # local module
 from collections import Counter
 import dateutil.parser # $ pip install python-dateutil
 
@@ -32,37 +33,9 @@ opts, args = opt_parser.parse_args()
 optsdict = ast.literal_eval(str(opts))
 argsdict = ast.literal_eval(str(args))
 
-class DirectedProfiler(Profiler):
+class DirectedProfiler(LinkNodesProfiler):
     def __init__(self, opts):
-        Profiler.__init__(self, opts)
-        self.links = {}
-        self.nodes = {}
-# nodes will end up as ["userA", "userB", ...]
-# links will end up as 
-#    {
-#        "userA": {"userB": 3, ...},
-#        "userB": {"userA": 1, ...},
-#        ...
-#    }
-#    
-# Meaning that userA mentions userB 3 times, and userB mentions userA once.
-
-    def addlink(self, source, target):
-        if not source in self.links:
-            self.links[source] = {}
-        if not source in self.nodes:
-            self.nodes[source] = {"source": 0, "target": 1}
-        else:
-            self.nodes[source]["target"] = self.nodes[source]["target"] + 1
-        userlink = self.links[source]
-        if target in userlink:
-            userlink[target] = userlink[target] + 1
-        else:
-            userlink[target] = 1
-        if target in self.nodes:
-            self.nodes[target]["source"] = self.nodes[target]["source"] + 1
-        else:
-            self.nodes[target] = {"source": 1, "target": 0}
+        LinkNodesProfiler.__init__(self, opts)
 
     def process(self, tweet):
         Profiler.process(self, tweet)
@@ -79,8 +52,7 @@ class DirectedProfiler(Profiler):
                 self.addlink(user, tweet["retweeted_status"]["user"]["screen_name"])
 
     def report(self):
-        profile = Profiler.report(self)
-        return {"profile": profile, "nodes": self.nodes, "links": self.links}
+        return LinkNodesProfiler.report(self)
 
 profiler = DirectedProfiler({"mode": opts.mode})
 
