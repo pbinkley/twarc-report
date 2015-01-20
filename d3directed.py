@@ -68,6 +68,8 @@ profile = data["profile"]
 nodes = data["nodes"]
 links = data["links"]
 
+optsdict["graph"] = "directed"
+
 json = d3json.nodeslinktrees(profile, nodes, links, optsdict, argsdict)
 
 if opts.output == "json":

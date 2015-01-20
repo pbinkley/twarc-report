@@ -57,7 +57,7 @@ path.link.hlOut {
 	stroke: #0f0;
 	stroke-width: 2px;
 }
-path.link.hlIn {
+path.link.hlIn, path.link.hlUndirected {
 	stroke: #44f;
 	stroke-width: 2px;
 }
@@ -72,7 +72,7 @@ circle.hl {
 	stroke: #f00;
 	fill: #f00;
 }
-circle.hlIn {
+circle.hlIn, circle.hlUndirected.hlUndirected, circle.hlUndirected {
 	stroke: #0f0;
 	fill: #cfc;
 }
@@ -99,7 +99,7 @@ g.hl text.shad {
 	stroke: #fcc;
   	stroke-opacity: 1;
 }
-g.hlIn text.shad {
+g.hlIn text.shad, g.hlUndirected text.shad {
 	stroke: #cfc;
   	stroke-opacity: 1;
 }
@@ -132,8 +132,14 @@ ul { margin: 0; padding: 0; list-style-type: none;}
 	
 	var mode = json["opts"]["mode"];
 	var threshold = json["opts"]["threshold"];
+	var graph = json["opts"]["graph"];
 	var links = json["links"];
 	var nodes = json["nodes"];
+	
+	// in directed graph we want different styles for in and out links, but
+	// in undirected they should be the same.
+	var inLinkClass = (graph == 'directed') ? "In" : "Undirected";
+	var outLinkClass = (graph == 'directed') ? "Out" : "Undirected";
 	
 	function twitterlink(n) {
 		return "<a href='https://twitter.com/" + n + "'>" + n + "</n>";
@@ -204,10 +210,13 @@ ul { margin: 0; padding: 0; list-style-type: none;}
    		
    		// clear previous selections
    		d3.selectAll(".hl").classed("hl", false);
-   		d3.selectAll(".hlIn").classed("hlIn", false);
-   		d3.selectAll(".hlOut").classed("hlOut", false);
+   		d3.selectAll(".hl"+inLinkClass).classed("hl"+inLinkClass, false);
+   		d3.selectAll(".hl"+outLinkClass).classed("hl"+outLinkClass, false);
    		// put foregrounded paths etc. (if any) back in background
-   		var p = pathsfg.selectAll("path").attr("marker-end", "url(#plain)");
+   		var p = pathsfg.selectAll("path");
+   		// add arrowheads if directed graph
+   		if (graph == 'directed') 
+   		    p.attr("marker-end", "url(#plain)");
    		if (p.size() > 0)
    			d3.select("#paths").each(function() {
 	   			f = this;
@@ -238,19 +247,26 @@ ul { margin: 0; padding: 0; list-style-type: none;}
    		// highlight paths
    		var inlist = [];
    		var outlist = [];
-   		d3.selectAll("path.out_" + name).classed("hlOut", true).attr("marker-end", "url(#out)").each(function(d){
+   		p = d3.selectAll("path.out_" + name).classed("hl"+outLinkClass, true);
+   		if (graph == 'directed')
+   		    p.attr("marker-end", "url(#out)")
+   		 p.each(function(d){
    			if (d.target.name != name) {
    				outlist.push(d.target.name);
-   				d3.select("#circle_" + d.target.name).classed("hlIn", true); 
-   				d3.select("#text_" + d.target.name).classed("hlIn", true);
+   				d3.select("#circle_" + d.target.name).classed("hl"+inLinkClass, true); 
+   				d3.select("#text_" + d.target.name).classed("hl"+inLinkClass, true);
    			};
    		});
-   		d3.selectAll("path.in_" + name).classed("hlIn", true).attr("marker-end", "url(#in)").each(function(d){
+   		p = d3.selectAll("path.in_" + name).classed("hl"+inLinkClass, true);
+   		if (graph == 'directed')
+   		    p.attr("marker-end", "url(#in)");
+   		p.each(function(d){
    			if (d.source.name != name) {
    				inlist.push(d.source.name);
-   				d3.select("#circle_" + d.source.name).classed("hlOut", true); 
-   				d3.select("#text_" + d.source.name).classed("hlOut", true)
-   				this["marker-end"] = "url(#out)";
+   				d3.select("#circle_" + d.source.name).classed("hl"+outLinkClass, true); 
+   				d3.select("#text_" + d.source.name).classed("hl"+outLinkClass, true);
+   				if (graph == 'directed')
+       				this["marker-end"] = "url(#out)";
    			};
    		});
 		var inlabel = {"retweets": "Retweeted by", "replies": "Replies to this", "mentions": "Mentioned"};
@@ -267,7 +283,7 @@ ul { margin: 0; padding: 0; list-style-type: none;}
 	   				f.appendChild(this) 
 	   			});
     		})
-   		var p = circles.selectAll(".hl, .hlIn, .hlOut");
+   		var p = circles.selectAll(".hl, .hlIn, .hlOut, .hlUndirected");
    		if (p.size() > 0)
    			d3.select("#circles-fg").each(function() {
 	   			f = this;
@@ -275,7 +291,7 @@ ul { margin: 0; padding: 0; list-style-type: none;}
 	   				f.appendChild(this) 
 	   			});
     		})
-   		var p = texts.selectAll(".hl, .hlIn, .hlOut");
+   		var p = texts.selectAll(".hl, .hlIn, .hlOut, .hlUndirected");
    		if (p.size() > 0)
    			d3.select("#texts-fg").each(function() {
 	   			f = this;
@@ -344,8 +360,10 @@ var path = svg.append("svg:g")
   .enter().append("svg:path")
     .attr("class", function(d) { return "link " + d.type + " out_" + d.source.name + " in_" + d.target.name; })
     .attr("out", function(d) { return d.source.name; })
-    .attr("in", function(d) { return d.target.name; })
-    .attr("marker-end", "url(#plain)");
+    .attr("in", function(d) { return d.target.name; });
+// add arrowheads if directed graph
+if (graph == 'directed')
+    path.attr("marker-end", "url(#plain)");
 
 var circle = svg.append("svg:g")
 	.attr("id", "circles")

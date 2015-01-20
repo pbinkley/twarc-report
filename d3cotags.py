@@ -7,15 +7,16 @@ import sys
 import optparse
 import d3json # local module
 from profiler import Profiler # local module
+from profiler import LinkNodesProfiler # local module
 from collections import Counter
 import ast
 import dateutil.parser # $ pip install python-dateutil
 
 
 
-class CotagsProfiler(Profiler):
+class CotagsProfiler(LinkNodesProfiler):
     def __init__(self, opts):
-        Profiler.__init__(self, opts)
+        LinkNodesProfiler.__init__(self, opts)
         self.savetweets = []
         self.counts = Counter()
         self.keepers = set()
@@ -34,14 +35,13 @@ class CotagsProfiler(Profiler):
         
 
     def report(self):
-        profile = Profiler.report(self)
 
-        # for tags below the "otherize" threshold, replace with "$other"
-        # which is not necessary if otherize is 0
-        if self.otherize > 0:
+        # for tags below the threshold, replace with "$other"
+        # which is not necessary if threshold is 0
+        if self.threshold > 0:
             countkeys = self.counts.keys()
             for countkey in countkeys:
-                if self.counts[countkey] < self.otherize:
+                if self.counts[countkey] < self.threshold:
                     # for a tag whose count is below the threshold, transfer its
                     # count to tag "$other" and delete it
                     self.counts['$other'] += self.counts[countkey]
@@ -49,17 +49,19 @@ class CotagsProfiler(Profiler):
                 else:
                     # otherwise add it to list of keepers
                     self.keepers.add(countkey)
-            
-        # now process hashtags again, replacing any tag not in keepers with $other
+            self.keepers.add('$other')
+            # keepers now has a complete set of surviving tags
+
+        # now process hashtags in tweets again, replacing any tag not in keepers with $other
         self.counts = Counter()
         for savetweet in self.savetweets:
         
-            # cleantags gathers unique, lower-cased tags
+            # cleantags gathers unique, lower-cased tags for this tweet
             cleantags = set()
         
             for hashtag in savetweet:
                 t = hashtag['text'].lower()
-                if self.otherize == 0 or t in self.keepers:
+                if self.threshold == 0 or t in self.keepers:
                     cleantags.add(t)
                 else:
                     cleantags.add('$other')
@@ -69,24 +71,24 @@ class CotagsProfiler(Profiler):
         
             # generate all pairs
             for c in itertools.combinations(cleantags, 2):
-                t = c[0] + "," + c[1]
-                self.counts[t] += 1
+                self.addlink(c[0], c[1])
                 if self.reciprocal:
-                    t = c[1] + "," + c[0]
-                    self.counts[t] += 1
-        tags = self.counts.keys()
-        tags.sort(lambda a, b: cmp(self.counts[b], self.counts[a]))
+                    self.addlink(c[1], c[0])
 
-        return {"profile": profile, "tags": tags, "counts": self.counts}
-
+        return LinkNodesProfiler.report(self)
 
 opt_parser = optparse.OptionParser()
+opt_parser.add_option("-o", "--output", dest="output", type="str", 
+    help="embed | json (default: embed)", default="embed")
 opt_parser.add_option('-e', '--exclude', type=str, default="", 
     help='comma-separated list of hashtags to exclude')
-opt_parser.add_option('-o', '--otherize', type=int, default=0, 
+opt_parser.add_option('-t', '--threshold', type=int, default=0, 
     help='threshold below which to treat hashtags as "other"')
 opt_parser.add_option('-r', '--reciprocal', action='store_true', default=False, 
-    help='add recciprocal links for each pair')
+    help='add reciprocal links for each pair')
+opt_parser.add_option("-p", "--template", dest="template", type="str", 
+    help="name of template in utils/template (default: directed.html)", default="directed.html")
+
 opts, args = opt_parser.parse_args()
 # prepare to serialize opts and args as json
 # converting opts to str produces string with single quotes,
@@ -94,12 +96,12 @@ opts, args = opt_parser.parse_args()
 optsdict = ast.literal_eval(str(opts))
 argsdict = ast.literal_eval(str(args))
 
-otherize = opts.otherize
+threshold = opts.threshold
 exclude = set(opts.exclude.lower().split(","))
 reciprocal = opts.reciprocal
 
 profiler = CotagsProfiler({
-    "otherize": otherize,
+    "threshold": threshold,
     "exclude": exclude,
     "reciprocal": reciprocal})
     
@@ -112,13 +114,18 @@ for line in fileinput.input(args):
         sys.stderr.write("uhoh: %s\n" % e)
 
 data = profiler.report()
-tags = data["tags"]
-counts = data["counts"]
+profile = data["profile"]
+nodes = data["nodes"]
+links = data["links"]
 
-# print csv headers
-print "source,target,count"
-for tag in counts:
-    print (tag + "," + str(counts[tag])).encode('utf8')
+optsdict["graph"] = "undirected"
+
+json = d3json.nodeslinktrees(profile, nodes, links, optsdict, argsdict)
+
+if opts.output == "json":
+    print json
+else:
+    d3json.embed(opts.template, json)
 
 
 
