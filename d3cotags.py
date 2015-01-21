@@ -32,10 +32,8 @@ class CotagsProfiler(LinkNodesProfiler):
             self.counts[t] += 1
         # add tag list to savetweets
         self.savetweets.append(savetweet)
-        
 
     def report(self):
-
         # for tags below the threshold, replace with "-OTHER"
         # which is not necessary if threshold is 0
         if self.threshold > 0:
@@ -44,12 +42,14 @@ class CotagsProfiler(LinkNodesProfiler):
                 if self.counts[countkey] < self.threshold:
                     # for a tag whose count is below the threshold, transfer its
                     # count to tag "-OTHER" and delete it
-                    self.counts['-OTHER'] += self.counts[countkey]
+                    if self.keepother:
+                        self.counts['-OTHER'] += self.counts[countkey]
                     del self.counts[countkey]
                 else:
                     # otherwise add it to list of keepers
                     self.keepers.add(countkey)
-            self.keepers.add('-OTHER')
+            if self.keepother:
+                self.keepers.add('-OTHER')
             # keepers now has a complete set of surviving tags
 
         # now process hashtags in tweets again, replacing any tag not in keepers with -OTHER
@@ -64,7 +64,8 @@ class CotagsProfiler(LinkNodesProfiler):
                 if self.threshold == 0 or t in self.keepers:
                     cleantags.add(t)
                 else:
-                    cleantags.add('-OTHER')
+                    if self.keepother:
+                        cleantags.add('-OTHER')
                 
             # sort tags and remove tags that are in the exclude set 
             cleantags = sorted(cleantags.difference(self.exclude))
@@ -88,6 +89,8 @@ opt_parser.add_option('-r', '--reciprocal', action='store_true', default=False,
     help='add reciprocal links for each pair')
 opt_parser.add_option("-p", "--template", dest="template", type="str", 
     help="name of template in utils/template (default: directed.html)", default="directed.html")
+opt_parser.add_option('-k', '--keepother', action='store_true', default=False, 
+    help='include -OTHER tag in output for tags below threshold')
 
 opts, args = opt_parser.parse_args()
 # prepare to serialize opts and args as json
@@ -99,11 +102,13 @@ argsdict = ast.literal_eval(str(args))
 threshold = opts.threshold
 exclude = set(opts.exclude.lower().split(","))
 reciprocal = opts.reciprocal
+keepother = opts.keepother
 
 profiler = CotagsProfiler({
     "threshold": threshold,
     "exclude": exclude,
-    "reciprocal": reciprocal})
+    "reciprocal": reciprocal,
+    "keepother": keepother})
     
 # gather counts for individual tags    
 for line in fileinput.input(args):
