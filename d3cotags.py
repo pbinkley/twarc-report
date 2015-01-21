@@ -36,23 +36,23 @@ class CotagsProfiler(LinkNodesProfiler):
 
     def report(self):
 
-        # for tags below the threshold, replace with "$other"
+        # for tags below the threshold, replace with "-OTHER"
         # which is not necessary if threshold is 0
         if self.threshold > 0:
             countkeys = self.counts.keys()
             for countkey in countkeys:
                 if self.counts[countkey] < self.threshold:
                     # for a tag whose count is below the threshold, transfer its
-                    # count to tag "$other" and delete it
-                    self.counts['$other'] += self.counts[countkey]
+                    # count to tag "-OTHER" and delete it
+                    self.counts['-OTHER'] += self.counts[countkey]
                     del self.counts[countkey]
                 else:
                     # otherwise add it to list of keepers
                     self.keepers.add(countkey)
-            self.keepers.add('$other')
+            self.keepers.add('-OTHER')
             # keepers now has a complete set of surviving tags
 
-        # now process hashtags in tweets again, replacing any tag not in keepers with $other
+        # now process hashtags in tweets again, replacing any tag not in keepers with -OTHER
         self.counts = Counter()
         for savetweet in self.savetweets:
         
@@ -64,7 +64,7 @@ class CotagsProfiler(LinkNodesProfiler):
                 if self.threshold == 0 or t in self.keepers:
                     cleantags.add(t)
                 else:
-                    cleantags.add('$other')
+                    cleantags.add('-OTHER')
                 
             # sort tags and remove tags that are in the exclude set 
             cleantags = sorted(cleantags.difference(self.exclude))
