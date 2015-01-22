@@ -50,6 +50,9 @@ class DirectedProfiler(LinkNodesProfiler):
         else: # default mode: retweets
             if "retweeted_status" in tweet:
                 self.addlink(user, tweet["retweeted_status"]["user"]["screen_name"])
+        # add to tweet count for this tag
+        self.nodes[user]["tweetcount"] += 1
+
 
     def report(self):
         return LinkNodesProfiler.report(self)

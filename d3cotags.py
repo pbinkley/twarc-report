@@ -69,13 +69,17 @@ class CotagsProfiler(LinkNodesProfiler):
                 
             # sort tags and remove tags that are in the exclude set 
             cleantags = sorted(cleantags.difference(self.exclude))
-        
+            
             # generate all pairs
             for c in itertools.combinations(cleantags, 2):
                 self.addlink(c[0], c[1])
                 if self.reciprocal:
                     self.addlink(c[1], c[0])
 
+            # add to tweet count for this tag
+            for tag in cleantags:
+                self.nodes[tag]["tweetcount"] += 1
+                
         return LinkNodesProfiler.report(self)
 
 opt_parser = optparse.OptionParser()

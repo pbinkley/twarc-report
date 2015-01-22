@@ -40,9 +40,15 @@ def nodeslinktrees(profile, nodes, opts, args):
     graph = opts["graph"]
     for node in nodes:
         if graph == "directed":
-            title = " (" + str(node["source"]) + "/" + str(node["target"]) + ")"
+            title = " (" + str(node["tweetcount"]) + " tweet"
+            if node["tweetcount"] != 1:
+                title += "s"
+            title += ": " + str(node["source"]) + " out/" + str(node["target"]) + " in)"
         else:
-            title = " (" + str(node["source"] + node["target"]) + ")"
+            title = " (" + str(node["tweetcount"]) + " tweet"
+            if node["tweetcount"] != 1:
+                title += "s"
+            title += ")"
         nodesoutput.append({"name": node["name"], 
             "title": str(node["name"]) + title})
        

@@ -72,14 +72,16 @@ class LinkNodesProfiler(Profiler):
 
     def addlink(self, source, target):
         if not source in self.nodes:
-            self.nodes[source] = {"name": source, "id": self.nodeid, "source": 1, "target": 0, "links": {}}
+            self.nodes[source] = {"name": source, "id": self.nodeid, "tweetcount": 0, 
+                "source": 1, "target": 0, "links": {}}
             self.nodeid += 1
         else:
             self.nodes[source]["source"] += 1
 
         if not target in self.nodes:
             targetid = self.nodeid
-            self.nodes[target] = {"name": target, "id": self.nodeid, "source": 0, "target": 1, "links": {}}
+            self.nodes[target] = {"name": target, "id": self.nodeid, "tweetcount": 0, 
+                "source": 0, "target": 1, "links": {}}
             self.nodeid += 1
         else:            
             self.nodes[target]["target"] += 1
