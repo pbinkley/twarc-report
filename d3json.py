@@ -33,25 +33,28 @@ def nodeslinks(threshold):
     
     print json.dump({"nodes": nodelist, "links": links})
 
-def nodeslinktrees(profile, nodes, links, opts, args):
+def nodeslinktrees(profile, nodes, opts, args):
     # generate nodes json
     nodesoutput = []
-    usernames = []
-    for u in nodes.iterkeys():
-        node = nodes[u]
-        usernames.append(u)
-        nodesoutput.append({"name": u, 
-            "title": str(u + " (" + str(node["source"]) + "/" + str(node["target"]) + ")")})
-       
-    # generate links json
     linksoutput = []
-    for source in links.iterkeys():
-        for target in links[source].iterkeys():
-            value = links[source][target]
-            if value >= opts["threshold"]:
-                linksoutput.append({"source": usernames.index(target), 
-                    "target": usernames.index(source), 
-                    "value": value})
+    graph = opts["graph"]
+    for node in nodes:
+        if graph == "directed":
+            title = " (" + str(node["source"]) + "/" + str(node["target"]) + ")"
+        else:
+            title = " (" + str(node["source"] + node["target"]) + ")"
+        nodesoutput.append({"name": node["name"], 
+            "title": str(node["name"]) + title})
+       
+        # generate links
+        for targetname in node["links"].iterkeys():
+            target = node["links"][targetname]
+            if target["count"] >= opts["threshold"]:
+                linksoutput.append({
+                    "source": node["id"], 
+                    "target": target["id"], 
+                    "value": target["count"]
+                })
 
     return {"profile": profile, "nodes": nodesoutput, "links": linksoutput, "opts": opts, "args": args}
 
@@ -70,6 +73,10 @@ def valuecsv(data):
     for d in data:
         csvwriter.writerow([d])
     return csvout.getvalue()
+    
+#def linknodescsv(data):
+    # convert link-nodes objects into csv
+    # e.g. {"A": {"B": 3, "C": 7}} to A,B,3 and A,C,7
 
 def namevaluejson(data):
     output = []

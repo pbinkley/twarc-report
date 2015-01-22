@@ -121,11 +121,10 @@ for line in fileinput.input(args):
 data = profiler.report()
 profile = data["profile"]
 nodes = data["nodes"]
-links = data["links"]
 
 optsdict["graph"] = "undirected"
 
-json = d3json.nodeslinktrees(profile, nodes, links, optsdict, argsdict)
+json = d3json.nodeslinktrees(profile, nodes, optsdict, argsdict)
 
 if opts.output == "json":
     print json

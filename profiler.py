@@ -1,6 +1,7 @@
 import dateutil
 import pytz # $ pip install pytz
 from collections import Counter
+import operator
 
 
 class Profiler:
@@ -51,39 +52,51 @@ class Profiler:
 class LinkNodesProfiler(Profiler):
     def __init__(self, opts):
         Profiler.__init__(self, opts)
-        self.links = {}
         self.nodes = {}
-# nodes will end up as ["userA", "userB", ...]
-# links will end up as 
-#    {
-#        "userA": {"userB": 3, ...},
-#        "userB": {"userA": 1, ...},
-#        ...
+        self.nodeid = 0
+
+# nodes will end up as 
+#  {"userA": 
+#    {"id": 27,
+#    "source": 0, 
+#    "target": 1,
+#    "links": {
+#        "userB": 3,
+#        "userC": 1
 #    }
 #    
 # Meaning that userA mentions userB 3 times, and userB mentions userA once.
+# We gather the nodes in a dictionary so that we can look up terms to update 
+# counts, but at the end we convert the dictionary into a list sorted by id
+# so that the positions in the list correspond to the ids, as D3 requires.
 
     def addlink(self, source, target):
-        if not source in self.links:
-            self.links[source] = {}
-            
         if not source in self.nodes:
-            self.nodes[source] = {"source": 0, "target": 1}
+            self.nodes[source] = {"name": source, "id": self.nodeid, "source": 1, "target": 0, "links": {}}
+            self.nodeid += 1
         else:
-            self.nodes[source]["target"] += 1
+            self.nodes[source]["source"] += 1
 
-        linklist = self.links[source]
-        if target in linklist:
-            linklist[target] += 1
-        else:
-            linklist[target] = 1
+        if not target in self.nodes:
+            targetid = self.nodeid
+            self.nodes[target] = {"name": target, "id": self.nodeid, "source": 0, "target": 1, "links": {}}
+            self.nodeid += 1
+        else:            
+            self.nodes[target]["target"] += 1
+            targetid = self.nodes[target]["id"]
 
-        if target in self.nodes:
-            self.nodes[target]["source"] += 1
+        linklist = self.nodes[source]["links"]
+        if not target in linklist:
+            linklist[target] = {"count": 1, "id": targetid}
         else:
-            self.nodes[target] = {"source": 1, "target": 0}
+            linklist[target]["count"] += 1
 
     def report(self):
         profile = Profiler.report(self)
-        return {"profile": profile, "nodes": self.nodes, "links": self.links}
+        # convert nodes dictionary to a list, sorted by id
+        nodelistkeys = sorted(self.nodes, key=lambda w: self.nodes[w]["id"])
+        nodelist = []
+        for key in nodelistkeys:
+            nodelist.append(self.nodes[key])
+        return {"profile": profile, "nodes": nodelist}
             
