@@ -27,6 +27,8 @@ opt_parser.add_option("-p", "--template", dest="template", type="str",
     
 opts, args = opt_parser.parse_args()
 
+output = opts.output
+
 # prepare to serialize opts and args as json
 # converting opts to str produces string with single quotes,
 # but json requires double quotes
@@ -67,14 +69,21 @@ for line in fileinput.input(args):
         sys.stderr.write("uhoh: %s\n" % e)
 
 data = profiler.report()
+
 profile = data["profile"]
 nodes = data["nodes"]
 
 optsdict["graph"] = "directed"
 
-json = d3json.nodeslinktrees(profile, nodes, optsdict, argsdict)
+if type(data) is dict:
+    data["opts"] = optsdict
+    data["args"] = argsdict
 
-if opts.output == "json":
-    print json
-else:
-    d3json.embed(opts.template, json)
+if output == "csv":
+    print d3json.nodeslinkcsv(nodes)
+elif output == 'json':
+    values = d3json.nodeslinktrees(profile, nodes, optsdict, argsdict)
+    print {"profile": profile, "values": values}
+elif output == 'embed':
+    print d3json.embed(opts.template, d3json.nodeslinktrees(profile, nodes, optsdict, argsdict))
+

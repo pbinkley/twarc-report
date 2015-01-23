@@ -80,7 +80,9 @@ class CotagsProfiler(LinkNodesProfiler):
             for tag in cleantags:
                 self.nodes[tag]["tweetcount"] += 1
                 
-        return LinkNodesProfiler.report(self)
+        data = LinkNodesProfiler.report(self)
+        return data;        
+            
 
 opt_parser = optparse.OptionParser()
 opt_parser.add_option("-o", "--output", dest="output", type="str", 
@@ -107,6 +109,7 @@ threshold = opts.threshold
 exclude = set(opts.exclude.lower().split(","))
 reciprocal = opts.reciprocal
 keepother = opts.keepother
+output = opts.output
 
 profiler = CotagsProfiler({
     "threshold": threshold,
@@ -123,17 +126,22 @@ for line in fileinput.input(args):
         sys.stderr.write("uhoh: %s\n" % e)
 
 data = profiler.report()
-profile = data["profile"]
-nodes = data["nodes"]
 
 optsdict["graph"] = "undirected"
 
-json = d3json.nodeslinktrees(profile, nodes, optsdict, argsdict)
+if type(data) is dict:
+    data["opts"] = optsdict
+    data["args"] = argsdict
 
-if opts.output == "json":
-    print json
-else:
-    d3json.embed(opts.template, json)
+profile = data["profile"]
+nodes = data["nodes"]
 
+if output == "csv":
+    print d3json.nodeslinkcsv(nodes)
+elif output == 'json':
+    values = d3json.nodeslinktrees(profile, nodes, optsdict, argsdict)
+    print {"profile": profile, "values": values}
+elif output == 'embed':
+    print d3json.embed(opts.template, d3json.nodeslinktrees(profile, nodes, optsdict, argsdict))
 
 

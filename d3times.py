@@ -72,13 +72,13 @@ class TimeProfiler(Profiler):
                 values = d3json.namevaluecsv(self.items)
             else:
                 values = d3json.valuecsv(self.items)
-            print data
+            return values
         else:
             if aggregate:
                 values = d3json.namevaluejson(self.items)
             else:
                 values = d3json.valuejson(self.items)
-        return {"profile": profile, "values": values}
+            return {"profile": profile, "values": values}
 
 
 opt_parser = optparse.OptionParser()

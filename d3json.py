@@ -80,9 +80,18 @@ def valuecsv(data):
         csvwriter.writerow([d])
     return csvout.getvalue()
     
-#def linknodescsv(data):
+def nodeslinkcsv(data):
     # convert link-nodes objects into csv
     # e.g. {"A": {"B": 3, "C": 7}} to A,B,3 and A,C,7
+    csvout = StringIO.StringIO()
+    csvwriter = csv.writer(csvout)
+    csvwriter.writerow(["source", "target", "value"])
+    for node in data:
+        source = node["name"]
+        # generate csv rows
+        for targetname in node["links"].iterkeys():
+            csvwriter.writerow([source, targetname, node["links"][targetname]["count"]])
+    return csvout.getvalue()
 
 def namevaluejson(data):
     output = []
