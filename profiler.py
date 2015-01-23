@@ -92,6 +92,15 @@ class LinkNodesProfiler(Profiler):
             linklist[target] = {"count": 1, "id": targetid}
         else:
             linklist[target]["count"] += 1
+            
+    def addsingle(self, name):
+        # assume this can only happen in undirected graph, so we don't care
+        # about source and target. Called from report, when tweets are being
+        # counted so we set tweetcount to 1.
+        if not name in self.nodes:
+            self.nodes[name] = {"name": name, "id": self.nodeid, "tweetcount": 1, 
+                "source": 0, "target": 0, "links": {}}
+            self.nodeid += 1        
 
     def report(self):
         profile = Profiler.report(self)

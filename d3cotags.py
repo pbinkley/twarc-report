@@ -26,8 +26,8 @@ class CotagsProfiler(LinkNodesProfiler):
         # gather a list of the tags in this tweet, lowercased
         savetweet = []
         for tag in tweet['entities']['hashtags']:
-            savetweet.append(tag)
             t = tag['text'].lower()
+            savetweet.append(t)
             # and increment count for this tag
             self.counts[t] += 1
         # add tag list to savetweets
@@ -59,10 +59,9 @@ class CotagsProfiler(LinkNodesProfiler):
             # cleantags gathers unique, lower-cased tags for this tweet
             cleantags = set()
         
-            for hashtag in savetweet:
-                t = hashtag['text'].lower()
-                if self.threshold == 0 or t in self.keepers:
-                    cleantags.add(t)
+            for tag in savetweet:
+                if self.threshold == 0 or tag in self.keepers:
+                    cleantags.add(tag)
                 else:
                     if self.keepother:
                         cleantags.add('-OTHER')
@@ -75,10 +74,17 @@ class CotagsProfiler(LinkNodesProfiler):
                 self.addlink(c[0], c[1])
                 if self.reciprocal:
                     self.addlink(c[1], c[0])
+            
+            # if this tag is the only one we're including from this tweet,
+            # then there won't be any combinations, and so it won't have
+            # been added to self.nodes by addlink: so add it.
 
             # add to tweet count for this tag
             for tag in cleantags:
-                self.nodes[tag]["tweetcount"] += 1
+                if tag in self.nodes:
+                    self.nodes[tag]["tweetcount"] += 1
+                else:
+                    self.addsingle(tag)
                 
         data = LinkNodesProfiler.report(self)
         return data;        
