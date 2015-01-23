@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
-    <title>twarc Directed Graph of Retweets</title>
+    <title>twarc Graph</title>
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <style type="text/css">
 
@@ -22,7 +22,13 @@ div#sidebar {
 div#sidebar_lists {
 	font-size: 75%;
 }
-
+#sidebar_user {
+    clear: both;
+    }
+    
+#termselect {
+    width: 100%;
+}
 div.sidebar_list {
 	width: 50%;
 	float:left;
@@ -121,7 +127,7 @@ ul { margin: 0; padding: 0; list-style-type: none;}
     	<div id="sidebar_lists">
 	    	<div class="sidebar_list" id="sidebar_inlist"></div>
     		<div class="sidebar_list" id="sidebar_outlist"></div>
-    	</div
+    	</div>
     </div>
     
     
@@ -140,6 +146,10 @@ ul { margin: 0; padding: 0; list-style-type: none;}
 	// in undirected they should be the same.
 	var inLinkClass = (graph == 'directed') ? "In" : "Undirected";
 	var outLinkClass = (graph == 'directed') ? "Out" : "Undirected";
+	
+	// hide the outlink div if this is an undirected graph
+	if (graph == 'undirected')
+	     d3.select("#sidebar_outlist").remove();
 	
 	function twitterlink(n) {
 		return "<a href='https://twitter.com/" + n + "'>" + n + "</n>";
@@ -175,8 +185,10 @@ ul { margin: 0; padding: 0; list-style-type: none;}
 		l = listsort(l);
 		// show threshold
 		html = "<div id='filename' class='metadata'>" + json["args"][0] + "</div>"
-		html += "<div id='argsopts' class='metadata'>Threshold: " + threshold + "<br/>Mode: " + mode + "</div>";
-		html += "<select onchange='userselect(this.value)'>";
+		html += "<div id='argsopts' class='metadata'>Threshold: " + threshold;
+		if (mode) html += "<br/>Mode: " + mode;
+		html += "</div>";
+		html += "<select id='termselect' onchange='userselect(this.value)'>";
 		for (var a = 0; a < l.length; a++) {
 			html += "<option>" + l[a] + "</option>";
 		}
@@ -247,12 +259,16 @@ ul { margin: 0; padding: 0; list-style-type: none;}
    		// highlight paths
    		var inlist = [];
    		var outlist = [];
+   		var alllist = {}; // may have to handle duplicates, from in and out lists
    		p = d3.selectAll("path.out_" + name).classed("hl"+outLinkClass, true);
    		if (graph == 'directed')
    		    p.attr("marker-end", "url(#out)")
    		 p.each(function(d){
    			if (d.target.name != name) {
-   				outlist.push(d.target.name);
+   			    if (graph == 'directed')
+       				outlist.push(d.target.name);
+       			else
+       			    alllist[d.target.name] = true;
    				d3.select("#circle_" + d.target.name).classed("hl"+inLinkClass, true); 
    				d3.select("#text_" + d.target.name).classed("hl"+inLinkClass, true);
    			};
@@ -262,7 +278,10 @@ ul { margin: 0; padding: 0; list-style-type: none;}
    		    p.attr("marker-end", "url(#in)");
    		p.each(function(d){
    			if (d.source.name != name) {
-   				inlist.push(d.source.name);
+   			    if (graph == 'directed')
+       				inlist.push(d.source.name);
+       			else
+       			    alllist[d.source.name] = true;
    				d3.select("#circle_" + d.source.name).classed("hl"+outLinkClass, true); 
    				d3.select("#text_" + d.source.name).classed("hl"+outLinkClass, true);
    				if (graph == 'directed')
@@ -271,8 +290,12 @@ ul { margin: 0; padding: 0; list-style-type: none;}
    		});
 		var inlabel = {"retweets": "Retweeted by", "replies": "Replies to this", "mentions": "Mentioned"};
 		var outlabel = {"retweets": "Retweeted", "replies": "Replies from this", "mentions": "Mentioned by"};
-		d3.select("#sidebar_inlist").html("<h3>" + inlabel[mode] + "</h3>" + listhtml(inlist));
-		d3.select("#sidebar_outlist").html("<h3>" + outlabel[mode] + "</h3>" + listhtml(outlist));
+		if (graph == 'directed') {
+    		d3.select("#sidebar_inlist").html("<h3>" + inlabel[mode] + "</h3>" + listhtml(inlist));
+	    	d3.select("#sidebar_outlist").html("<h3>" + outlabel[mode] + "</h3>" + listhtml(outlist));
+	    }
+	    else
+	        d3.select("#sidebar_inlist").html("<h3>Co-Tags</h3>" + listhtml(Object.keys(alllist).sort()));
 
 		// move path to a different group: based on https://groups.google.com/forum/#!topic/d3-js/KEiqiUPZHUs
    		var p = paths.selectAll("path.out_" + name +", path.in_" + name);
