@@ -1,10 +1,7 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8"></meta>
-    <title>twarc Graph</title>
-    <script src="http://d3js.org/d3.v3.min.js"></script>
-    <style type="text/css">
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<style type="text/css">
 
 div#sidebar {
     position:fixed;
@@ -121,17 +118,14 @@ ul { margin: 0; padding: 0; list-style-type: none;}
   <body>
   
     <div id="sidebar">
-        <div id="sidebar_selectdiv">
-        </div>
+        <div id="sidebar_selectdiv"></div>
         <h2 id="sidebar_term"></h2>
         <div id="sidebar_lists">
             <div class="sidebar_list" id="sidebar_inlist"></div>
             <div class="sidebar_list" id="sidebar_outlist"></div>
         </div>
     </div>
-    
-    
-
+    <svg id="chart"></svg>
   
     <script type="text/javascript">
     var json = $JSON$;
@@ -370,7 +364,7 @@ var force = d3.layout.force()
     .on("tick", tick)
     .start();
 
-var svg = d3.select("body").append("svg:svg")
+var svg = d3.select("#chart")
     .attr("width", w)
     .attr("height", h);
 
@@ -465,6 +459,4 @@ function tick() {
 
 window.scrollTo(scrollx, scrolly);
 </script>
-    
-  </body>
-</html>
+</body>
