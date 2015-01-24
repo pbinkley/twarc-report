@@ -7,9 +7,10 @@ import math
 import re
 import optparse
 import fileinput
-import d3json # local module
+import d3output # local module
 import ast
 from profiler import Profiler # local module
+from profiler import LinkNodesProfiler # local module
 from collections import Counter
 import dateutil.parser # $ pip install python-dateutil
 
@@ -22,9 +23,11 @@ opt_parser.add_option("-t", "--threshold", dest="threshold", type="int",
 opt_parser.add_option("-o", "--output", dest="output", type="str", 
     help="embed | json (default: embed)", default="embed")
 opt_parser.add_option("-p", "--template", dest="template", type="str", 
-    help="name of template in utils/template (default: directed.html)", default="directed.html")
+    help="name of template in utils/template (default: graph.html)", default="graph.html")
     
 opts, args = opt_parser.parse_args()
+
+output = opts.output
 
 # prepare to serialize opts and args as json
 # converting opts to str produces string with single quotes,
@@ -32,37 +35,9 @@ opts, args = opt_parser.parse_args()
 optsdict = ast.literal_eval(str(opts))
 argsdict = ast.literal_eval(str(args))
 
-class DirectedProfiler(Profiler):
+class DirectedProfiler(LinkNodesProfiler):
     def __init__(self, opts):
-        Profiler.__init__(self, opts)
-        self.links = {}
-        self.nodes = {}
-# nodes will end up as ["userA", "userB", ...]
-# links will end up as 
-#    {
-#        "userA": {"userB": 3, ...},
-#        "userB": {"userA": 1, ...},
-#        ...
-#    }
-#    
-# Meaning that userA mentions userB 3 times, and userB mentions userA once.
-
-    def addlink(self, source, target):
-        if not source in self.links:
-            self.links[source] = {}
-        if not source in self.nodes:
-            self.nodes[source] = {"source": 0, "target": 1}
-        else:
-            self.nodes[source]["target"] = self.nodes[source]["target"] + 1
-        userlink = self.links[source]
-        if target in userlink:
-            userlink[target] = userlink[target] + 1
-        else:
-            userlink[target] = 1
-        if target in self.nodes:
-            self.nodes[target]["source"] = self.nodes[target]["source"] + 1
-        else:
-            self.nodes[target] = {"source": 1, "target": 0}
+        LinkNodesProfiler.__init__(self, opts)
 
     def process(self, tweet):
         Profiler.process(self, tweet)
@@ -77,10 +52,14 @@ class DirectedProfiler(Profiler):
         else: # default mode: retweets
             if "retweeted_status" in tweet:
                 self.addlink(user, tweet["retweeted_status"]["user"]["screen_name"])
+        # add to tweet count for this tag
+        if not user in self.nodes:
+            self.addsingle(user)
+        self.nodes[user]["tweetcount"] += 1
+
 
     def report(self):
-        profile = Profiler.report(self)
-        return {"profile": profile, "nodes": self.nodes, "links": self.links}
+        return LinkNodesProfiler.report(self)
 
 profiler = DirectedProfiler({"mode": opts.mode})
 
@@ -92,13 +71,22 @@ for line in fileinput.input(args):
         sys.stderr.write("uhoh: %s\n" % e)
 
 data = profiler.report()
+
 profile = data["profile"]
 nodes = data["nodes"]
-links = data["links"]
 
-json = d3json.nodeslinktrees(profile, nodes, links, optsdict, argsdict)
+optsdict["graph"] = "directed"
+optsdict["field"] = "user"
 
-if opts.output == "json":
-    print json
-else:
-    d3json.embed(opts.template, json)
+if type(data) is dict:
+    data["opts"] = optsdict
+    data["args"] = argsdict
+
+if output == "csv":
+    print d3output.nodeslinkcsv(nodes)
+elif output == 'json':
+    values = d3output.nodeslinktrees(profile, nodes, optsdict, argsdict)
+    print {"profile": profile, "values": values}
+elif output == 'embed':
+    print d3output.embed(opts.template, d3output.nodeslinktrees(profile, nodes, optsdict, argsdict))
+

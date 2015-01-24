@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.min.js"></script>
 <style>
 
 .axis text {
@@ -27,7 +28,6 @@
 }
 </style>
 <body>
-<script src="http://d3js.org/d3.v3.min.js"></script>
 <div id="metadata"></div>
 <svg id="chart"></svg>
 <script>
@@ -64,7 +64,7 @@ var margin = {top: 100, right: 100, bottom: 100, left: 100},
     width = parseInt(d3.select("#chart").style("width")) - margin.left - margin.right,
     height = parseInt(d3.select("#chart").style("height")) - margin.top - margin.bottom;
 
-var chart = d3.select("#chart")
+var svg = d3.select("#chart")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
@@ -88,7 +88,7 @@ var intervalCount = timespan / interval; // how many intervals in x
 var barWidth = width / intervalCount; // width of one interval, in pixels
 
 // x-axis
-chart.append("g")
+svg.append("g")
   .attr("class", "x axis")
   .attr("transform", "translate(0," + height + ")")
   .call(d3.svg.axis().scale(x).orient("bottom"))
@@ -100,7 +100,7 @@ chart.append("g")
   .text("date");
     
 // y-axis
-chart.append("g")
+svg.append("g")
   .attr("class", "y axis")
   .call(d3.svg.axis().scale(y).orient("left"))
 .append("text")
@@ -111,7 +111,7 @@ chart.append("g")
   .style("text-anchor", "end")
   .text("tweets");
 
-var bar = chart.selectAll(".bar")
+var bar = svg.selectAll(".bar")
   .data(values)
 .enter().append("g")
   .append("rect")
@@ -124,3 +124,4 @@ var bar = chart.selectAll(".bar")
   .text(function(d) { return tformatter(d.name) + ": " + d.value + " tweets"; });
 
 </script>
+</body>

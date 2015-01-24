@@ -33,25 +33,34 @@ def nodeslinks(threshold):
     
     print json.dump({"nodes": nodelist, "links": links})
 
-def nodeslinktrees(profile, nodes, links, opts, args):
+def nodeslinktrees(profile, nodes, opts, args):
     # generate nodes json
     nodesoutput = []
-    usernames = []
-    for u in nodes.iterkeys():
-        node = nodes[u]
-        usernames.append(u)
-        nodesoutput.append({"name": u, 
-            "title": str(u + " (" + str(node["source"]) + "/" + str(node["target"]) + ")")})
-       
-    # generate links json
     linksoutput = []
-    for source in links.iterkeys():
-        for target in links[source].iterkeys():
-            value = links[source][target]
-            if value >= opts["threshold"]:
-                linksoutput.append({"source": usernames.index(target), 
-                    "target": usernames.index(source), 
-                    "value": value})
+    graph = opts["graph"]
+    for node in nodes:
+        if graph == "directed":
+            title = " (" + str(node["tweetcount"]) + " tweet"
+            if node["tweetcount"] != 1:
+                title += "s"
+            title += ": " + str(node["source"]) + " out/" + str(node["target"]) + " in)"
+        else:
+            title = " (" + str(node["tweetcount"]) + " tweet"
+            if node["tweetcount"] != 1:
+                title += "s"
+            title += ")"
+        nodesoutput.append({"name": node["name"], 
+            "title": str(node["name"]) + title})
+       
+        # generate links
+        for targetname in node["links"].iterkeys():
+            target = node["links"][targetname]
+            if target["count"] >= opts["threshold"]:
+                linksoutput.append({
+                    "source": node["id"], 
+                    "target": target["id"], 
+                    "value": target["count"]
+                })
 
     return {"profile": profile, "nodes": nodesoutput, "links": linksoutput, "opts": opts, "args": args}
 
@@ -69,6 +78,19 @@ def valuecsv(data):
     csvwriter.writerow(["value"])
     for d in data:
         csvwriter.writerow([d])
+    return csvout.getvalue()
+    
+def nodeslinkcsv(data):
+    # convert link-nodes objects into csv
+    # e.g. {"A": {"B": 3, "C": 7}} to A,B,3 and A,C,7
+    csvout = StringIO.StringIO()
+    csvwriter = csv.writer(csvout)
+    csvwriter.writerow(["source", "target", "value"])
+    for node in data:
+        source = node["name"]
+        # generate csv rows
+        for targetname in node["links"].iterkeys():
+            csvwriter.writerow([source, targetname, node["links"][targetname]["count"]])
     return csvout.getvalue()
 
 def namevaluejson(data):
