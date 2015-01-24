@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8"></meta>
     <title>twarc Graph</title>
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <style type="text/css">
@@ -339,13 +339,9 @@ ul { margin: 0; padding: 0; list-style-type: none;}
 var win = window,
     d = document,
     e = d.documentElement,
-    g = d.getElementsByTagName('body')[0],
-    w = win.innerWidth || e.clientWidth || g.clientWidth,
-    h = win.innerHeight|| e.clientHeight|| g.clientHeight;
+    g = d.getElementsByTagName('body')[0]
 
-// set sidebar to height of window
-d3.select("#sidebar").style.height = h + 'px'; 
-
+// prepare list of terms for dropdown
 var terms = [];
 for (var a = 0; a < nodes.length; a++) {
     terms.push(nodes[a]["name"]);
@@ -353,9 +349,17 @@ for (var a = 0; a < nodes.length; a++) {
 
 d3.select("#sidebar_selectdiv").html(selecthtml(terms));
     
-// no, on second thought, make the window really really big
+// get viewport dimensions
+var portw = win.innerWidth || e.clientWidth || g.clientWidth,
+    porth = win.innerHeight|| e.clientHeight|| g.clientHeight;
+
+// make the svg really really big
 w = 2000;
 h = 2000;
+
+// but we'll want to scroll so that it is centred
+scrollx = (w >= portw) ? Math.round((w - portw)/2) : 0;
+scrolly = (h >= porth) ? Math.round((h - porth)/2) : 0;
 
 var force = d3.layout.force()
     .nodes(d3.values(nodes))
@@ -459,7 +463,8 @@ function tick() {
 }
 //    });
 
-    </script>
+window.scrollTo(scrollx, scrolly);
+</script>
     
   </body>
 </html>
