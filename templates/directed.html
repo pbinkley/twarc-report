@@ -139,8 +139,16 @@ ul { margin: 0; padding: 0; list-style-type: none;}
 	var mode = json["opts"]["mode"];
 	var threshold = json["opts"]["threshold"];
 	var graph = json["opts"]["graph"];
+	var field = json["opts"]["field"];
 	var links = json["links"];
 	var nodes = json["nodes"];
+	
+	switch (field) {
+	    case "user": twitterlinkroot = "https://twitter.com/";
+	        break;
+	    case "hashtag": twitterlinkroot = "https://twitter.com/hashtag/";
+	        break;
+	}
 	
 	// in directed graph we want different styles for in and out links, but
 	// in undirected they should be the same.
@@ -152,7 +160,7 @@ ul { margin: 0; padding: 0; list-style-type: none;}
 	     d3.select("#sidebar_outlist").remove();
 	
 	function twitterlink(n) {
-		return "<a href='https://twitter.com/" + n + "'>" + n + "</n>";
+		return "<a href='" + twitterlinkroot + n + "'>" + n + "</n>";
 	}
 	
 	function selectlink(n) {

@@ -134,6 +134,7 @@ for line in fileinput.input(args):
 data = profiler.report()
 
 optsdict["graph"] = "undirected"
+optsdict["field"] = "hashtag"
 
 if type(data) is dict:
     data["opts"] = optsdict

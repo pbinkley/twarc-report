@@ -74,6 +74,7 @@ profile = data["profile"]
 nodes = data["nodes"]
 
 optsdict["graph"] = "directed"
+optsdict["field"] = "user"
 
 if type(data) is dict:
     data["opts"] = optsdict
