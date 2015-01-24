@@ -7,7 +7,7 @@ import math
 import re
 import optparse
 import fileinput
-import d3json # local module
+import d3output # local module
 import ast
 from profiler import Profiler # local module
 from profiler import LinkNodesProfiler # local module
@@ -81,10 +81,10 @@ if type(data) is dict:
     data["args"] = argsdict
 
 if output == "csv":
-    print d3json.nodeslinkcsv(nodes)
+    print d3output.nodeslinkcsv(nodes)
 elif output == 'json':
-    values = d3json.nodeslinktrees(profile, nodes, optsdict, argsdict)
+    values = d3output.nodeslinktrees(profile, nodes, optsdict, argsdict)
     print {"profile": profile, "values": values}
 elif output == 'embed':
-    print d3json.embed(opts.template, d3json.nodeslinktrees(profile, nodes, optsdict, argsdict))
+    print d3output.embed(opts.template, d3output.nodeslinktrees(profile, nodes, optsdict, argsdict))
 

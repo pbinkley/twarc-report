@@ -8,7 +8,7 @@ import datetime
 import dateutil.parser # $ pip install python-dateutil
 import pytz # $ pip install pytz
 from tzlocal import get_localzone # $ pip install tzlocal
-import d3json # local module
+import d3output # local module
 from profiler import Profiler # local module
 import ast
 import re
@@ -69,15 +69,15 @@ class TimeProfiler(Profiler):
         profile = Profiler.report(self)
         if self.output == "csv":
             if aggregate:
-                values = d3json.namevaluecsv(self.items)
+                values = d3output.namevaluecsv(self.items)
             else:
-                values = d3json.valuecsv(self.items)
+                values = d3output.valuecsv(self.items)
             return values
         else:
             if aggregate:
-                values = d3json.namevaluejson(self.items)
+                values = d3output.namevaluejson(self.items)
             else:
-                values = d3json.valuejson(self.items)
+                values = d3output.valuejson(self.items)
             return {"profile": profile, "values": values}
 
 
@@ -138,7 +138,7 @@ if type(data) is dict:
     data["args"] = argsdict
     
 if opts.output == "embed":
-    d3json.embed(opts.template, data)
+    d3output.embed(opts.template, data)
 else:
     print data
 

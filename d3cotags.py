@@ -5,7 +5,7 @@ import itertools
 import fileinput
 import sys
 import optparse
-import d3json # local module
+import d3output # local module
 from profiler import Profiler # local module
 from profiler import LinkNodesProfiler # local module
 from collections import Counter
@@ -100,7 +100,7 @@ opt_parser.add_option('-t', '--threshold', type=int, default=0,
 opt_parser.add_option('-r', '--reciprocal', action='store_true', default=False, 
     help='add reciprocal links for each pair')
 opt_parser.add_option("-p", "--template", dest="template", type="str", 
-    help="name of template in utils/template (default: graph.html)", default="grph.html")
+    help="name of template in utils/template (default: graph.html)", default="graph.html")
 opt_parser.add_option('-k', '--keepother', action='store_true', default=False, 
     help='include -OTHER tag in output for tags below threshold')
 
@@ -144,11 +144,11 @@ profile = data["profile"]
 nodes = data["nodes"]
 
 if output == "csv":
-    print d3json.nodeslinkcsv(nodes)
+    print d3output.nodeslinkcsv(nodes)
 elif output == 'json':
-    values = d3json.nodeslinktrees(profile, nodes, optsdict, argsdict)
+    values = d3output.nodeslinktrees(profile, nodes, optsdict, argsdict)
     print {"profile": profile, "values": values}
 elif output == 'embed':
-    print d3json.embed(opts.template, d3json.nodeslinktrees(profile, nodes, optsdict, argsdict))
+    print d3output.embed(opts.template, d3output.nodeslinktrees(profile, nodes, optsdict, argsdict))
 
 
