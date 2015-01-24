@@ -53,6 +53,8 @@ class DirectedProfiler(LinkNodesProfiler):
             if "retweeted_status" in tweet:
                 self.addlink(user, tweet["retweeted_status"]["user"]["screen_name"])
         # add to tweet count for this tag
+        if not user in self.nodes:
+            self.addsingle(user)
         self.nodes[user]["tweetcount"] += 1
 
 
