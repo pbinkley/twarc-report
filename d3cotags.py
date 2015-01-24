@@ -100,7 +100,7 @@ opt_parser.add_option('-t', '--threshold', type=int, default=0,
 opt_parser.add_option('-r', '--reciprocal', action='store_true', default=False, 
     help='add reciprocal links for each pair')
 opt_parser.add_option("-p", "--template", dest="template", type="str", 
-    help="name of template in utils/template (default: directed.html)", default="directed.html")
+    help="name of template in utils/template (default: graph.html)", default="grph.html")
 opt_parser.add_option('-k', '--keepother', action='store_true', default=False, 
     help='include -OTHER tag in output for tags below threshold')
 

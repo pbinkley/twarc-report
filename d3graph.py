@@ -23,7 +23,7 @@ opt_parser.add_option("-t", "--threshold", dest="threshold", type="int",
 opt_parser.add_option("-o", "--output", dest="output", type="str", 
     help="embed | json (default: embed)", default="embed")
 opt_parser.add_option("-p", "--template", dest="template", type="str", 
-    help="name of template in utils/template (default: directed.html)", default="directed.html")
+    help="name of template in utils/template (default: graph.html)", default="graph.html")
     
 opts, args = opt_parser.parse_args()
 
