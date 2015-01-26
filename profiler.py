@@ -23,6 +23,9 @@ class Profiler:
         self.latest = ""
         self.users = Counter()
         
+    def adduser(self, user):
+        self.users[user] += 1
+        
     def process(self, tweet):
         self.count += 1
         if "retweeted_status" in tweet:
@@ -35,8 +38,7 @@ class Profiler:
         if self.latest == "" or self.latest < self.created_at:
             self.latest = self.created_at
         user = tweet["user"]["screen_name"]
-        self.users[user] += 1
-
+        self.adduser(user)
         
     def report(self):
         local_earliest = self.tz.normalize(self.earliest.astimezone(self.tz)).strftime(self.labelFormat)

@@ -41,7 +41,8 @@ class DirectedProfiler(LinkNodesProfiler):
 
     def process(self, tweet):
         Profiler.process(self, tweet)
-        user = tweet["user"]["screen_name"]
+
+    def adduser(self, user):
         if self.mode == 'mentions':
             if "user_mentions" in tweet["entities"]:
                 for mention in tweet["entities"]["user_mentions"]:
@@ -56,7 +57,6 @@ class DirectedProfiler(LinkNodesProfiler):
         if not user in self.nodes:
             self.addsingle(user)
         self.nodes[user]["tweetcount"] += 1
-
 
     def report(self):
         return LinkNodesProfiler.report(self)
