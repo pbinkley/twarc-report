@@ -6,6 +6,7 @@ import sys
 import optparse
 from profiler import Profiler # local module
 import dateutil.parser # $ pip install python-dateutil
+import sparkline
 
 opt_parser = optparse.OptionParser()
 opt_parser.add_option("-o", "--output", dest="output", type="str", 
@@ -36,9 +37,9 @@ else:
     print "Latest:   " + str(data["latest"])
     print "Duration: " + str(dateutil.parser.parse(data["latest"]) - dateutil.parser.parse(data["earliest"]))
 
-    print "Top users:"
+    print "Top users: " + sparkline.sparkify([u["value"] for u in data["topusers"]]).encode("utf-8")
     for user in data["topusers"]:
         print "{:>7}".format(str(user["value"])) + " " + user["name"]
-    print "Top URLs:"
+    print "Top URLs: " + sparkline.sparkify([u["value"] for u in data["topurls"]]).encode("utf-8")
     for url in data["topurls"]:
         print "{:>7}".format(str(url["value"])) + " " + url["name"]
