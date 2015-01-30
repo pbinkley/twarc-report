@@ -29,8 +29,12 @@ if (opts.output == "json"):
 else:
     print "Count:    " + '{:>9}'.format(str(data["count"]))
     print "Users:    " + '{:>9}'.format(str(data["usercount"]))
+    print "User percentiles: " + sparkline.sparkify(data["userspercentiles"])
+    print "                  " + str(data["userspercentiles"])
     print "Has URL:  " + '{:>9}'.format(str(data["urlcount"])) + " (" + str("%.2f" % (float(data["urlcount"]) / float(data["count"]) * 100.0)) + "%)"
     print "URLs:     " + '{:>9}'.format(str(data["urls"]))
+    print "URLs percentiles: " + sparkline.sparkify(data["urlspercentiles"])
+    print "                  " + str(data["urlspercentiles"])
     print "Retweets: " + '{:>9}'.format(str(data["retweetcount"])) + " (" + str("%.2f" % (float(data["retweetcount"]) / float(data["count"]) * 100.0)) + "%)"
     print "Geo:      " + '{:>9}'.format(str(data["geocount"])) + " (" + str("%.2f" % (float(data["geocount"]) / float(data["count"]) * 100.0)) + "%)"
     print "Earliest: " + str(data["earliest"])

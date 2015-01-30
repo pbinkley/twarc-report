@@ -53,6 +53,22 @@ class Profiler:
                     self.addurl(url["expanded_url"])
                 self.urlcount += 1
         
+    def tops(self, list, title):
+        total = int(sum(list.values()))
+        sorted = list.most_common()
+        top = sorted[:10]
+        top_result = []
+        for name, value in top:
+            top_result.append({"name": name, "value": value})
+        step = float(len(sorted)) / 10
+        percentiles = []
+        for i in range(0, 10):
+            start = int(i * step)
+            end = int((i + 1) * step)
+            count = sum(v for k,v in sorted[start:end])
+            percentiles.append(int(round(float(count) / total * 100)))
+        return {"top" + title: top_result, title+"percentiles": percentiles}
+    
     def report(self):
         local_earliest = self.tz.normalize(self.earliest.astimezone(self.tz)).strftime(self.labelFormat)
         local_latest = self.tz.normalize(self.latest.astimezone(self.tz)).strftime(self.labelFormat)
@@ -63,22 +79,10 @@ class Profiler:
             "latest": local_latest, 
             "usercount": len(self.users)}
         if self.extended:
-            sorted_users = sorted(self.users, key = self.users.get, reverse = True)
-            top_users = sorted_users[:10]
-            top_users_result = []
-            for top_user in top_users:
-                top_users_result.append({"name": top_user, "value": self.users[top_user]})
-            sorted_urls = sorted(self.urls, key = self.urls.get, reverse = True)
-            top_urls = sorted_urls[:10]
-            top_urls_result = []
-            for top_url in top_urls:
-                top_urls_result.append({"name": top_url, "value": self.urls[top_url]})
-            result.update({"urlcount": self.urlcount,
-                "urls": len(self.urls),
-                "topusers": top_users_result,
-                "topurls": top_urls_result})
+            result.update(self.tops(self.users, "users"))
+            result.update(self.tops(self.urls, "urls"))
+            result.update({"urlcount": self.urlcount, "urls": len(self.urls)})
         return result
-            
             
 class LinkNodesProfiler(Profiler):
     def __init__(self, opts):
