@@ -54,19 +54,30 @@ class Profiler:
                 self.urlcount += 1
         
     def tops(self, list, title):
-        total = int(sum(list.values()))
+        # given a list of name-value pairs, return the top 10 pairs by value,
+        # and a list of integers representing the percent of total value
+        # held by each of 10 slices
+        
+        totalcount = len(list)
+        totalvalue = int(sum(list.values()))
         sorted = list.most_common()
+        
         top = sorted[:10]
         top_result = []
         for name, value in top:
             top_result.append({"name": name, "value": value})
-        step = float(len(sorted)) / 10
+
+        step = float(totalcount) / 10
         percentiles = []
         for i in range(0, 10):
             start = int(i * step)
             end = int((i + 1) * step)
-            count = sum(v for k,v in sorted[start:end])
-            percentiles.append(int(round(float(count) / total * 100)))
+            slicecount = end - start
+            # weight the slice value as if the slice were an even 10th of the list
+            weight = 10 / (float(slicecount) / totalcount)
+            slicevalue = sum(v for k,v in sorted[start:end])
+            percentile = int(round(float(slicevalue) / totalvalue * weight))
+            percentiles.append(percentile)
         return {"top" + title: top_result, title+"percentiles": percentiles}
     
     def report(self):
