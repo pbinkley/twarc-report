@@ -14,6 +14,8 @@ class Profiler:
             self.labelFormat = "%Y-%m-%d %H:%M:%S %Z"
         if not("tz" in opts):
             self.tz = pytz.UTC
+        if not("extended" in opts):
+            self.extended = False
             
         # initialize 
         self.count = 0
@@ -22,6 +24,15 @@ class Profiler:
         self.earliest = ""
         self.latest = ""
         self.users = Counter()
+        if self.extended:
+            self.urls = Counter()
+            self.urlcount = 0
+        
+    def adduser(self, user):
+        self.users[user] += 1
+        
+    def addurl(self, url):
+        self.urls[url] += 1
         
     def process(self, tweet):
         self.count += 1
@@ -35,19 +46,54 @@ class Profiler:
         if self.latest == "" or self.latest < self.created_at:
             self.latest = self.created_at
         user = tweet["user"]["screen_name"]
-        self.users[user] += 1
-
+        self.adduser(user)
+        if self.extended:
+            if len(tweet["entities"]["urls"]) > 0:
+                for url in tweet["entities"]["urls"]:
+                    self.addurl(url["expanded_url"])
+                self.urlcount += 1
         
+    def tops(self, list, title):
+        # given a list of name-value pairs, return the top 10 pairs by value,
+        # and a list of integers representing the percent of total value
+        # held by each of 10 slices
+        
+        totalcount = len(list)
+        totalvalue = int(sum(list.values()))
+        sorted = list.most_common()
+        
+        top = sorted[:10]
+        top_result = []
+        for name, value in top:
+            top_result.append({"name": name, "value": value})
+
+        step = float(totalcount) / 10
+        percentiles = []
+        for i in range(0, 10):
+            start = int(i * step)
+            end = int((i + 1) * step)
+            slicecount = end - start
+            # weight the slice value as if the slice were an even 10th of the list
+            weight = 10 / (float(slicecount) / totalcount)
+            slicevalue = sum(v for k,v in sorted[start:end])
+            percentile = int(round(float(slicevalue) / totalvalue * weight))
+            percentiles.append(percentile)
+        return {"top" + title: top_result, title+"percentiles": percentiles}
+    
     def report(self):
         local_earliest = self.tz.normalize(self.earliest.astimezone(self.tz)).strftime(self.labelFormat)
         local_latest = self.tz.normalize(self.latest.astimezone(self.tz)).strftime(self.labelFormat)
-        return {"count": self.count, 
+        result = {"count": self.count, 
             "retweetcount": self.retweetcount, 
             "geocount": self.geocount,
             "earliest": local_earliest, 
             "latest": local_latest, 
             "usercount": len(self.users)}
-            
+        if self.extended:
+            result.update(self.tops(self.users, "users"))
+            result.update(self.tops(self.urls, "urls"))
+            result.update({"urlcount": self.urlcount, "urls": len(self.urls)})
+        return result
             
 class LinkNodesProfiler(Profiler):
     def __init__(self, opts):
