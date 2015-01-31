@@ -18,6 +18,12 @@ to use csv in a pre-existing D3 chart.
 The d3graph.py utility was originally added to the twarc repo as
 directed.py but is moving here for consistency.
 
+**Requirements**
+
+* dateutil - `python-dateutil`
+* pytz - `pip install pytz`
+* tzlocal - `pip install tzlocal`
+
 ## D3 visualizations
 
 Some utilities to generate [D3](http://d3js.org/) visualizations of aspects of a collection
