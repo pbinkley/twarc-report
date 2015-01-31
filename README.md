@@ -20,6 +20,8 @@ directed.py but is moving here for consistency.
 
 **Requirements**
 
+All requirements may be installed with `pip install -r requirements.txt`
+
 * dateutil - `python-dateutil`
 * pytz - `pip install pytz`
 * tzlocal - `pip install tzlocal`
