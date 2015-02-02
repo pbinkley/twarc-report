@@ -25,8 +25,13 @@ class Profiler:
         self.latest = ""
         self.users = Counter()
         if self.extended:
+            self.hashtags = Counter()
+            self.hashtagcount = 0
             self.urls = Counter()
             self.urlcount = 0
+            self.imageurls = Counter()
+            self.imageurlcount = 0
+            
         
     def adduser(self, user):
         self.users[user] += 1
@@ -34,6 +39,12 @@ class Profiler:
     def addurl(self, url):
         self.urls[url] += 1
         
+    def addhashtag(self, hashtag):
+        self.hashtags[hashtag] += 1
+
+    def addimageurl(self, imageurl):
+        self.imageurls[imageurl] += 1
+
     def process(self, tweet):
         self.count += 1
         if "retweeted_status" in tweet:
@@ -48,10 +59,30 @@ class Profiler:
         user = tweet["user"]["screen_name"]
         self.adduser(user)
         if self.extended:
+            # handle urls
             if len(tweet["entities"]["urls"]) > 0:
                 for url in tweet["entities"]["urls"]:
                     self.addurl(url["expanded_url"])
                 self.urlcount += 1
+                
+            # handle hashtags
+            if len(tweet["entities"]["hashtags"]) > 0:
+                for tag in tweet['entities']['hashtags']:
+                    # hashtags are not case sensitive, so lower() to dedupe
+                    # or just leave it and accept dupes?
+                    self.addhashtag(tag['text'].lower())
+                self.hashtagcount += 1
+            
+            # handle imageurls
+            if 'media' in tweet['entities']:
+                hasimageurl = False
+                for media in tweet['entities']['media']:
+                    if media['type'] == 'photo':
+                        self.addimageurl(media['media_url'])
+                        hasimageurl = True
+                if hasimageurl:
+                    self.imageurlcount += 1
+
         
     def tops(self, list, title):
         # given a list of name-value pairs, return the top 10 pairs by value,
@@ -91,8 +122,12 @@ class Profiler:
             "usercount": len(self.users)}
         if self.extended:
             result.update(self.tops(self.users, "users"))
+            result.update(self.tops(self.hashtags, "hashtags"))
             result.update(self.tops(self.urls, "urls"))
-            result.update({"urlcount": self.urlcount, "urls": len(self.urls)})
+            result.update(self.tops(self.imageurls, "imageurls"))
+            result.update({"urlcount": self.urlcount, "urls": len(self.urls), 
+                "imageurlcount": self.imageurlcount, "imageurls": len(self.imageurls),
+                "hashtagcount": self.hashtagcount, "hashtags": len(self.hashtags)})
         return result
             
 class LinkNodesProfiler(Profiler):
