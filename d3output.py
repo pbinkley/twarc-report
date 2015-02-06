@@ -109,4 +109,4 @@ def embed(template, d3json):
     # generate html by replacing token
     template_file = os.path.join(os.path.dirname(__file__), "templates", template)
     with open (template_file, "r") as template:
-        print template.read().replace('$JSON$', json.dumps(d3json))
+        print template.read().replace('$DATA$', json.dumps(d3json))
