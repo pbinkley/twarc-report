@@ -13,7 +13,7 @@ opt_parser.add_option("-o", "--output", dest="output", type="str",
     help="text | json (default: json)", default="json")
 opts, args = opt_parser.parse_args()
 
-profiler = Profiler({"extended": True})
+profiler = Profiler({"extended": True, "blocks": ["all"]})
 
 for line in fileinput.input(args):
     try:

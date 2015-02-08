@@ -16,6 +16,11 @@ class Profiler:
             self.tz = pytz.UTC
         if not("extended" in opts):
             self.extended = False
+        if not("blocks" in opts):
+            self.blocks = ["all"]
+        if "all" in self.blocks:
+            self.blocks.extend(["topusers", "tophashtags", "topurls", "topimageurls", "urls", 
+                "imageurls"])
             
         # initialize 
         self.count = 0
@@ -25,12 +30,15 @@ class Profiler:
         self.latest = ""
         self.users = Counter()
         if self.extended:
-            self.hashtags = Counter()
-            self.hashtagcount = 0
-            self.urls = Counter()
-            self.urlcount = 0
-            self.imageurls = Counter()
-            self.imageurlcount = 0
+            if "tophashtags" in self.blocks: 
+                self.hashtags = Counter()
+                self.hashtagcount = 0
+            if "urls" in self.blocks or "topurls" in self.blocks:
+                self.urls = Counter()
+                self.urlcount = 0
+            if "imageurls" in self.blocks or "topimageurls" in self.blocks:
+                self.imageurls = Counter()
+                self.imageurlcount = 0
             
         
     def adduser(self, user):
@@ -121,13 +129,20 @@ class Profiler:
             "latest": local_latest, 
             "usercount": len(self.users)}
         if self.extended:
-            result.update(self.tops(self.users, "users"))
-            result.update(self.tops(self.hashtags, "hashtags"))
-            result.update(self.tops(self.urls, "urls"))
-            result.update(self.tops(self.imageurls, "imageurls"))
-            result.update({"urlcount": self.urlcount, "urls": len(self.urls), 
-                "imageurlcount": self.imageurlcount, "imageurls": len(self.imageurls),
-                "hashtagcount": self.hashtagcount, "hashtags": len(self.hashtags)})
+            if "topusers" in self.blocks:
+                result.update(self.tops(self.users, "users"))
+            if "tophashtags" in self.blocks:
+                result.update(self.tops(self.hashtags, "hashtags"))
+            if "topurls" in self.blocks:
+                result.update(self.tops(self.urls, "urls"))
+            if "urls" in self.blocks:
+                result.update({"urlcount": self.urlcount, "urls": len(self.urls), 
+                    "imageurlcount": self.imageurlcount, "imageurls": len(self.imageurls),
+                    "hashtagcount": self.hashtagcount, "hashtags": len(self.hashtags)})
+            if "topimageurls" in self.blocks:
+                result.update(self.tops(self.imageurls, "imageurls"))
+            if "imageurls" in self.blocks:
+                result.update({"imageurlslist": self.imageurls})
         return result
             
 class LinkNodesProfiler(Profiler):
