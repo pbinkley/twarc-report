@@ -31,7 +31,14 @@ All requirements may be installed with `pip install -r requirements.txt`
 * pysparklines = `pip install pysparklines`
 
 Twarc-report also includes a copy of [twarc](https://github.com/edsu/twarc) as a 
-[submodule](http://git-scm.com/book/en/v2/Git-Tools-Submodules). 
+[submodule](http://git-scm.com/book/en/v2/Git-Tools-Submodules). If the `twarc`
+subdirectory in your clone is empty, you can populate it with the latest version
+of twarc like this:
+
+```
+git submodule init
+git submodule update
+```
 
 ## Harvest
 
