@@ -2,6 +2,7 @@
 Data conversions and examples for generating reports from [twarc](https://github.com/edsu/twarc) collections using tools such as D3.js
 
 - [Requirements](#user-content-requirements)
+- [Harvest](#user-content-harvest)
 - [Profile](#user-content-profile)
 - [D3 Visualizations](#user-content-d3-visualizations)
 - [Exploring D3 Examples](#user-content-exploring-d3-examples)
@@ -28,6 +29,24 @@ All requirements may be installed with `pip install -r requirements.txt`
 * pytz - `pip install pytz`
 * tzlocal - `pip install tzlocal`
 * pysparklines = `pip install pysparklines`
+
+Twarc-report also includes a copy of [twarc](https://github.com/edsu/twarc) as a 
+[submodule](http://git-scm.com/book/en/v2/Git-Tools-Submodules). 
+
+## Harvest
+
+The script `harvest.py` will use twarc's `archive.py` to start or update a harvest using a given
+search and stored in a given directory. The directory path is passed as the only parameter. The 
+search is read from a file `metadata.json` in the target directory, which should be in this form:
+
+```
+{"search": "#ferguson",
+"title": "Ferguson Tweets",
+"creator": "Peter Binkley"}
+```
+
+(Currently only the `search` value is used but other metadata fields will be used to populate
+HTML output in future releases.)
 
 ## Profile
 
