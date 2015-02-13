@@ -68,28 +68,31 @@ class Profiler:
         self.adduser(user)
         if self.extended:
             # handle urls
-            if len(tweet["entities"]["urls"]) > 0:
-                for url in tweet["entities"]["urls"]:
-                    self.addurl(url["expanded_url"])
-                self.urlcount += 1
+            if "urls" in self.blocks or "topurls" in self.blocks:
+                if len(tweet["entities"]["urls"]) > 0:
+                    for url in tweet["entities"]["urls"]:
+                        self.addurl(url["expanded_url"])
+                    self.urlcount += 1
                 
             # handle hashtags
-            if len(tweet["entities"]["hashtags"]) > 0:
-                for tag in tweet['entities']['hashtags']:
-                    # hashtags are not case sensitive, so lower() to dedupe
-                    # or just leave it and accept dupes?
-                    self.addhashtag(tag['text'].lower())
-                self.hashtagcount += 1
+            if "hashtags" in self.blocks or "tophashtags" in self.blocks:
+                if len(tweet["entities"]["hashtags"]) > 0:
+                    for tag in tweet['entities']['hashtags']:
+                        # hashtags are not case sensitive, so lower() to dedupe
+                        # or just leave it and accept dupes?
+                        self.addhashtag(tag['text'].lower())
+                    self.hashtagcount += 1
             
             # handle imageurls
-            if 'media' in tweet['entities']:
-                hasimageurl = False
-                for media in tweet['entities']['media']:
-                    if media['type'] == 'photo':
-                        self.addimageurl(media['media_url'])
-                        hasimageurl = True
-                if hasimageurl:
-                    self.imageurlcount += 1
+            if "imageurls" in self.blocks or "topimageurls" in self.blocks:
+                if 'media' in tweet['entities']:
+                    hasimageurl = False
+                    for media in tweet['entities']['media']:
+                        if media['type'] == 'photo':
+                            self.addimageurl(media['media_url'])
+                            hasimageurl = True
+                    if hasimageurl:
+                        self.imageurlcount += 1
 
         
     def tops(self, list, title):
