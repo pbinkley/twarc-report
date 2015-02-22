@@ -1,8 +1,11 @@
 import dateutil
+import dateutil.parser # $ pip install python-dateutil
+import datetime
 import pytz # $ pip install pytz
 from collections import Counter
 import operator
-
+import re
+import d3output
 
 class Profiler:
     def __init__(self, opts):
@@ -206,4 +209,72 @@ class LinkNodesProfiler(Profiler):
         for key in nodelistkeys:
             nodelist.append(self.nodes[key])
         return {"profile": profile, "nodes": nodelist}
+
+class TimeProfiler(Profiler):
+    # interval, in milliseconds
+    intervalFormats = {
+        "S": {"name": "second", "format": "%Y-%m-%d %H:%M:%S", "interval": 1000},
+        "M": {"name": "minute", "format": "%Y-%m-%d %H:%M", "interval":  1000 * 60},
+        "H": {"name": "hour", "format": "%Y-%m-%d %H", "interval":  1000 * 60 * 60},
+        "d": {"name": "day", "format": "%Y-%m-%d", "interval":  1000 * 60 * 60 * 24},
+        "m": {"name": "month", "format": "%Y-%m", "interval":  1000 * 60 * 60 * 24 * 28},
+        "Y": {"name": "year", "format": "%Y-%m", "interval":  1000 * 60 * 60 * 24 * 365}
+    }
+    def __init__(self, opts):
+        Profiler.__init__(self, opts)
+        try:
+            self.intervalParts = re.search("([0-9]*)([^0-9]*)", self.intervalStr)
+            if self.intervalParts.group(1) == "":
+                self.intervalCount = 1
+            else:
+                self.intervalCount = int(self.intervalParts.group(1))
+            self.intervalUnit = self.intervalParts.group(2)
+            self.interval = self.intervalCount * self.intervalFormats[self.intervalUnit]["interval"]
+            self.format = self.intervalFormats[self.intervalUnit]["format"]
+            self.intervalLabel = str(self.intervalCount) + " " + self.intervalFormats[self.intervalUnit]["name"]
+            if self.intervalCount > 1:
+                self.intervalLabel += "s"
+
+        except ValueError as e:
+            sys.stderr.write("uhoh: %s\n" % e)
+
+        # gather in a dict with count if aggregating, otherwise in a list
+        if self.aggregate:
+            self.items = {}
+        else:
+            self.items = []
+
+    def process(self, tweet):
+        Profiler.process(self, tweet)
+        created_at = dateutil.parser.parse(tweet["created_at"])
+        local_dt = self.tz.normalize(created_at.astimezone(self.tz))
+        if self.intervalStr != '':
+            if self.intervalUnit == "S":
+                local_dt = local_dt - datetime.timedelta(seconds=local_dt.second % int(self.intervalCount))
+            elif self.intervalUnit == "M":
+                local_dt = local_dt - datetime.timedelta(minutes=local_dt.minute % int(self.intervalCount))
+            elif self.intervalUnit == "H":
+                local_dt = local_dt - datetime.timedelta(hours=local_dt.hour % int(self.intervalCount))
+        # otherwise use format to aggregate values - though this treats intervalCount as 1
+        result = local_dt.strftime(self.format)
+        if self.aggregate:
+            self.items[result] = self.items.get(result, 0) + 1
+        else:
+            self.items.append(result)
+        # return the time slice label
+        return result
             
+    def report(self):
+        profile = Profiler.report(self)
+        if self.output == "csv":
+            if self.aggregate:
+                values = d3output.namevaluecsv(self.items)
+            else:
+                values = d3output.valuecsv(self.items)
+            return values
+        else:
+            if self.aggregate:
+                values = d3output.namevaluejson(self.items)
+            else:
+                values = d3output.valuejson(self.items)
+            return {"profile": profile, "values": values}

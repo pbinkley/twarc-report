@@ -122,6 +122,29 @@ The example above uses five-minute intervals. Output may be aggregated
 using -a: each row has a time value and a count. Note that if you are
 generating the embedded example, you must use -a.
 
+### d3wordcloud.py
+
+An animated wordcloud, in which words are added and removed according to 
+changes in frequency over time. 
+
+    % d3wordcloud.py -t local -i 1H nasa-20130306102105.json > projects/nasa/nasa-wordcloud.html
+    
+[Example](https://wallandbinkley.com/twarc/c4l15/animatedwordcloud.html)
+    
+The optional -t control timezone and -i controls interval, as in d3timebar.py. Start and end 
+timestamps may be set with -s and -e. 
+
+This script calls a [fork](https://github.com/pbinkley/d3-cloud) of Jason Davies' 
+[d3-cloud](https://github.com/jasondavies/d3-cloud) project. The forked version attempts
+to keep the carried-over words in transitions close to their previous position. d3waterfall.py uses 
+local paths to load the d3 and d3-cloud libraries, in this form: ```../assets/d3.layout.cloud.js```. 
+This assumes that you might have multiple twarc projects in sibling directories, and you could 
+copy the ```assets``` directory (which is now part of twarc-report) to be a sibling of those project 
+directories. Future work on twarc-report will add more libraries to ```assets```, which will be 
+loaded in the same way.
+
+
+
 ## Exploring D3 Examples
 
 The json and csv outputs can be used to view your data in D3 example
