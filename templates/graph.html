@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<script src="http://d3js.org/d3.v3.min.js"></script>
+<title>$TITLE$</title>
+<script src="../assets/d3js/d3.v3.min.js"></script>
 <style type="text/css">
 
 div#sidebar {
@@ -33,6 +34,14 @@ div.sidebar_list {
 
 div#argsopts {
     float: right;
+}
+div#metadata {
+    position: fixed;
+    top: 0;
+    right: 0;
+    border: 1px solid black;
+    background: #eee;
+    padding: 5px;
 }
 div.metadata {
     font-size: 75%;
@@ -126,16 +135,30 @@ ul { margin: 0; padding: 0; list-style-type: none;}
         </div>
     </div>
     <svg id="chart"></svg>
+    <div id="metadata"></div>
   
     <script type="text/javascript">
-    var json = $DATA$;
+    var data = $DATA$;
+    var metadata = data.metadata;
+    var profile = data.profile;
+
+    var mode = data["opts"]["mode"];
+    var threshold = data["opts"]["threshold"];
+    var graph = data["opts"]["graph"];
+    var field = data["opts"]["field"];
+    var links = data["links"];
+    var nodes = data["nodes"];
     
-    var mode = json["opts"]["mode"];
-    var threshold = json["opts"]["threshold"];
-    var graph = json["opts"]["graph"];
-    var field = json["opts"]["field"];
-    var links = json["links"];
-    var nodes = json["nodes"];
+
+    html = "<strong>" + metadata["title"] + "</strong> | Search: " + metadata["search"];
+        html += " | Threshold: " + threshold;
+        if (mode) html += " | Mode: " + mode;
+        html += "<br/>";
+    html += profile.count + " tweets from " + profile.usercount + " users, including " + profile.retweetcount + " retweets (" + (profile.retweetcount / profile.count * 100).toFixed(2) + "%), "
+    html += "and " + profile.geocount + " with geo (" + (profile.geocount / profile.count * 100).toFixed(2) + "%): "
+    html += profile.earliest + " to " + profile.latest
+    d3.select("#metadata").html(html);
+
     
     switch (field) {
         case "user": twitterlinkroot = "https://twitter.com/";
@@ -185,12 +208,7 @@ ul { margin: 0; padding: 0; list-style-type: none;}
     
     function selecthtml(l) {
         l = listsort(l);
-        // show threshold
-        html = "<div id='filename' class='metadata'>" + json["args"][0] + "</div>"
-        html += "<div id='argsopts' class='metadata'>Threshold: " + threshold;
-        if (mode) html += "<br/>Mode: " + mode;
-        html += "</div>";
-        html += "<select id='termselect' onchange='termselect(this.value)'>";
+        html = "<select id='termselect' onchange='termselect(this.value)'>";
         for (var a = 0; a < l.length; a++) {
             html += "<option>" + l[a] + "</option>";
         }

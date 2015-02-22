@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<script src="http://d3js.org/d3.v3.min.js"></script>
+<title>$TITLE$</title>
+<script src="../assets/d3js/d3.v3.min.js"></script>
 <style>
 
 .axis text {
@@ -37,6 +38,7 @@ function type(d) {
 }
 
 var data = $DATA$;
+var metadata = data["metadata"];
 var values = data.values;
 var profile = data.profile;
 
@@ -47,9 +49,7 @@ template = data.opts.template;
 intervalStr = data.opts.intervalStr;
 intervalLabel = data.opts.intervalLabel;
 
-filename = data["args"][0];
-
-html = filename + " | Timezone: " + timezone + " | Template: " + template + " | Interval: " + intervalLabel + "<br/>";
+html = "<strong>" + metadata["title"] + "</strong><br/>Search: " + metadata["search"] + " | Timezone: " + timezone + " | Template: " + template + " | Interval: " + intervalLabel + "<br/>";
 html += profile.count + " tweets from " + profile.usercount + " users, including " + profile.retweetcount + " retweets (" + (profile.retweetcount / profile.count * 100).toFixed(2) + "%), "
 html += "and " + profile.geocount + " with geo (" + (profile.geocount / profile.count * 100).toFixed(2) + "%): "
 html += profile.earliest + " to " + profile.latest

@@ -106,7 +106,20 @@ def valuejson(data):
     return output
 
 def embed(template, d3json):
+    # load metadata.json if present
+    # d3json["args"] contains filenams passed in, with wildcards resolved
+    metadata_file = os.path.join(os.path.dirname(d3json["args"][0]), "metadata.json")
+    try:
+        with open(metadata_file) as json_data:
+            metadata = json.load(json_data)
+            json_data.close()
+    except:
+        sys.exit("Cannot read metadata file " + metadata_file)
+    d3json["metadata"] = metadata
     # generate html by replacing token
     template_file = os.path.join(os.path.dirname(__file__), "templates", template)
     with open (template_file, "r") as template:
-        print template.read().replace('$DATA$', json.dumps(d3json))
+        output = template.read()
+        output = output.replace('$TITLE$', metadata["title"])
+        output = output.replace('$DATA$', json.dumps(d3json))
+        print output
