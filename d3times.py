@@ -9,77 +9,9 @@ import dateutil.parser # $ pip install python-dateutil
 import pytz # $ pip install pytz
 from tzlocal import get_localzone # $ pip install tzlocal
 import d3output # local module
-from profiler import Profiler # local module
+from profiler import TimeProfiler # local module
 import ast
 import re
-
-class TimeProfiler(Profiler):
-    # interval, in milliseconds
-    intervalFormats = {
-        "S": {"name": "second", "format": "%Y-%m-%d %H:%M:%S", "interval": 1000},
-        "M": {"name": "minute", "format": "%Y-%m-%d %H:%M", "interval":  1000 * 60},
-        "H": {"name": "hour", "format": "%Y-%m-%d %H", "interval":  1000 * 60 * 60},
-        "d": {"name": "day", "format": "%Y-%m-%d", "interval":  1000 * 60 * 60 * 24},
-        "m": {"name": "month", "format": "%Y-%m", "interval":  1000 * 60 * 60 * 24 * 28},
-        "Y": {"name": "year", "format": "%Y-%m", "interval":  1000 * 60 * 60 * 24 * 365}
-    }
-    def __init__(self, opts):
-        Profiler.__init__(self, opts)
-        try:
-            self.intervalParts = re.search("([0-9]*)([^0-9]*)", self.intervalStr)
-            if self.intervalParts.group(1) == "":
-                self.intervalCount = 1
-            else:
-                self.intervalCount = int(self.intervalParts.group(1))
-            self.intervalUnit = self.intervalParts.group(2)
-            self.interval = self.intervalCount * self.intervalFormats[self.intervalUnit]["interval"]
-            self.format = self.intervalFormats[self.intervalUnit]["format"]
-            self.intervalLabel = str(self.intervalCount) + " " + self.intervalFormats[self.intervalUnit]["name"]
-            if self.intervalCount > 1:
-                self.intervalLabel += "s"
-
-        except ValueError as e:
-            sys.stderr.write("uhoh: %s\n" % e)
-
-        # gather in a dict with count if aggregating, otherwise in a list
-        if aggregate:
-            self.items = {}
-        else:
-            self.items = []
-
-    def process(self, tweet):
-        Profiler.process(self, tweet)
-        created_at = dateutil.parser.parse(tweet["created_at"])
-        local_dt = self.tz.normalize(created_at.astimezone(tz))
-        if self.intervalStr != '':
-            if self.intervalUnit == "S":
-                local_dt = local_dt - datetime.timedelta(seconds=local_dt.second % int(self.intervalCount))
-            elif self.intervalUnit == "M":
-                local_dt = local_dt - datetime.timedelta(minutes=local_dt.minute % int(self.intervalCount))
-            elif self.intervalUnit == "H":
-                local_dt = local_dt - datetime.timedelta(hours=local_dt.hour % int(self.intervalCount))
-        # otherwise use format to aggregate values - though this treats intervalCount as 1
-        result = local_dt.strftime(self.format)
-        if self.aggregate:
-            self.items[result] = self.items.get(result, 0) + 1
-        else:
-            self.items.append(result)
-            
-    def report(self):
-        profile = Profiler.report(self)
-        if self.output == "csv":
-            if aggregate:
-                values = d3output.namevaluecsv(self.items)
-            else:
-                values = d3output.valuecsv(self.items)
-            return values
-        else:
-            if aggregate:
-                values = d3output.namevaluejson(self.items)
-            else:
-                values = d3output.valuejson(self.items)
-            return {"profile": profile, "values": values}
-
 
 opt_parser = optparse.OptionParser()
 opt_parser.add_option('-t', '--timezone', type=str, default="", 

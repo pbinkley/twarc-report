@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+  <script src="../assets/d3.v3.min.js"></script>
+  <script src="../assets/d3.layout.cloud.js"></script>
+  <style>
+  .label {
+  font: 48px "Helvetica Neue";
+  fill: #ddd;
+}
+</style>
+  <script>
+
+//Simple animated example of d3-cloud - https://github.com/jasondavies/d3-cloud
+//Based on https://github.com/jasondavies/d3-cloud/blob/master/examples/simple.html
+
+var w = window,
+    d = document,
+    e = d.documentElement,
+    g = d.getElementsByTagName('body')[0],
+    width = w.innerWidth || e.clientWidth || g.clientWidth,
+    height = w.innerHeight|| e.clientHeight|| g.clientHeight,
+    currentlabel = "";
+
+var data = $DATA$;
+var values = data["values"];
+    
+// Encapsulate the word cloud functionality
+function wordCloud(selector) {
+
+    // get highest count, to serve as high of pointsize domain
+    var max = d3.max(d3.entries(values), function(d) {
+        return (d.value["words"].length > 0) ? d.value["words"][0]["count"] : 0;
+    });
+
+    // linear scale to convert counts to point sizes
+    var pointsize = d3.scale.log()
+        .domain([1, max])
+        .range([24, 60]);
+        
+    //Construct the word cloud's SVG element
+    var svg = d3.select(selector).append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", "translate(" + Math.round(width/2) + "," + Math.round(height/2) + ")");
+
+// Add the timeslice label; the value is set on transition.
+var label = svg.append("text")
+    .attr("class", "label")
+    .attr("text-anchor", "start")
+    .attr("y", Math.round(height/2) * -1 +48)
+    .attr("x", Math.round(width/2) * -1 +24)
+    .text("");
+
+    //Draw the word cloud
+    function draw(words) {
+        // transition timing modelled on http://stackoverflow.com/questions/26421388/d3-js-subtransition-with-exit-and-enter
+        label.text(currentlabel);
+
+        var cloud = svg.selectAll("g text.word")
+                        .data(words, function(d) { return d.text; })
+        var transition=d3.transition().duration(2000);
+        
+        // remove exiting words 
+        if (!cloud.exit().empty()) 
+            transition = transition.each(function(){
+                cloud.exit()
+                    .transition()
+                        .duration(1000)
+                        .style("fill", "gray")
+                        .style('fill-opacity', 1e-6)
+                        .attr('font-size', 1)
+                        .remove();
+            }).transition();
+
+        // Resize and reposition updating words
+        if (!cloud.empty()) {
+
+            transition = transition.each(function(){
+                cloud
+                    .transition()
+                        .duration(1000)
+                        .style("fill", "black")
+                        .style("font-size", function(d) { return d.size + "px"; })
+                        .attr("transform", function(d) {
+                                return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                            })
+                        .style("fill-opacity", 1);
+            }).transition();
+        }
+        
+        //Entering words
+        if (!cloud.enter().empty()) 
+            transition=transition.each(function(){
+                cloud.enter()
+                    .append("text")
+                    .style("font-family", "Futura")
+                    .style("fill", "red")
+                    .attr("class", "word")
+                    .attr("text-anchor", "middle")
+                    .attr('font-size', 0)
+                    .text(function(d) { return d.text; })
+                        .attr("transform", function(d) {
+                                return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                            })
+                    .transition()
+                        .duration(1000)
+                        .style("font-size", function(d) { return d.size + "px"; })
+                        .style("fill-opacity", 1);
+            }).transition();
+
+    }
+
+
+    //Use the module pattern to encapsulate the visualisation code. We'll
+    // expose only the parts that need to be public.
+    return {
+
+        //Recompute the word cloud for a new set of words. This method will
+        // asycnhronously call draw when the layout has been computed.
+        //The outside world will need to call this function, so make it part
+        // of the wordCloud return value.
+        update: function(words) {
+            d3.layout.cloud().size([width, height])
+                .words(words)
+                .padding(5)
+                .rotate(20)
+                .font("Futura")
+                .fontSize(function(d) { return pointsize(d.size); })
+                .on("end", draw)
+                .start();
+        }
+    }
+
+}
+
+function getWords(words) {
+    return words.map(function(d) {
+        return {text: d.text, size: d.count};
+    })
+}
+
+//Create a new instance of the word cloud visualisation.
+var myWordCloud = wordCloud('body');
+
+//This method tells the word cloud to redraw with a new set of words.
+//In reality the new words would probably come from a server request,
+// user input or some other source.
+
+
+function showNewWords(x) {
+    value = values[x];
+    // TODO format label for different intervals
+    currentlabel = value.name + ":00 : " + value.value + " tweet" + ((value.value > 1) ? "s" : "");
+    myWordCloud.update(getWords(value["words"]));
+    if (x != values.length) {
+        setTimeout(function() { showNewWords(x + 1)}, 7000)
+    }
+}
+
+//Start cycling through the data
+showNewWords(0);
+
+
+
+</script>
+
