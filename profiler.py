@@ -118,10 +118,13 @@ class Profiler:
             start = int(i * step)
             end = int((i + 1) * step)
             slicecount = end - start
-            # weight the slice value as if the slice were an even 10th of the list
-            weight = 10 / (float(slicecount) / totalcount)
-            slicevalue = sum(v for k,v in sorted[start:end])
-            percentile = int(round(float(slicevalue) / totalvalue * weight))
+            if slicecount > 0:
+                # weight the slice value as if the slice were an even 10th of the list
+                weight = 10 / (float(slicecount) / totalcount)
+                slicevalue = sum(v for k,v in sorted[start:end])
+                percentile = int(round(float(slicevalue) / totalvalue * weight))
+            else:
+                percentile = 0
             percentiles.append(percentile)
         return {"top" + title: top_result, title+"percentiles": percentiles}
     
