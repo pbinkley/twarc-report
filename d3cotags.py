@@ -2,17 +2,11 @@
 
 import json
 import itertools
-import fileinput
-import sys
 import optparse
 import d3output # local module
 from profiler import Profiler # local module
 from profiler import LinkNodesProfiler # local module
 from collections import Counter
-import ast
-import dateutil.parser # $ pip install python-dateutil
-
-
 
 class CotagsProfiler(LinkNodesProfiler):
     def __init__(self, opts):
@@ -25,8 +19,8 @@ class CotagsProfiler(LinkNodesProfiler):
         Profiler.process(self, tweet)
         # gather a list of the tags in this tweet, lowercased
         savetweet = []
-        for tag in tweet['entities']['hashtags']:
-            t = tag['text'].lower()
+        for tag in tweet["entities"]["hashtags"]:
+            t = tag["text"].lower()
             savetweet.append(t)
             # and increment count for this tag
             self.counts[t] += 1
@@ -43,13 +37,13 @@ class CotagsProfiler(LinkNodesProfiler):
                     # for a tag whose count is below the threshold, transfer its
                     # count to tag "-OTHER" and delete it
                     if self.keepother:
-                        self.counts['-OTHER'] += self.counts[countkey]
+                        self.counts["-OTHER"] += self.counts[countkey]
                     del self.counts[countkey]
                 else:
                     # otherwise add it to list of keepers
                     self.keepers.add(countkey)
             if self.keepother:
-                self.keepers.add('-OTHER')
+                self.keepers.add("-OTHER")
             # keepers now has a complete set of surviving tags
 
         # now process hashtags in tweets again, replacing any tag not in keepers with -OTHER
@@ -64,7 +58,7 @@ class CotagsProfiler(LinkNodesProfiler):
                     cleantags.add(tag)
                 else:
                     if self.keepother:
-                        cleantags.add('-OTHER')
+                        cleantags.add("-OTHER")
                 
             # sort tags and remove tags that are in the exclude set 
             cleantags = sorted(cleantags.difference(self.exclude))
@@ -92,24 +86,19 @@ class CotagsProfiler(LinkNodesProfiler):
 
 opt_parser = optparse.OptionParser()
 opt_parser.add_option("-o", "--output", dest="output", type="str", 
-    help="embed | json (default: embed)", default="embed")
-opt_parser.add_option('-e', '--exclude', type=str, default="", 
-    help='comma-separated list of hashtags to exclude')
-opt_parser.add_option('-t', '--threshold', type=int, default=0, 
-    help='threshold below which to treat hashtags as "other"')
-opt_parser.add_option('-r', '--reciprocal', action='store_true', default=False, 
-    help='add reciprocal links for each pair')
+    help="html | json (default: html)", default="html")
+opt_parser.add_option("-e", "--exclude", type=str, default="", 
+    help="comma-separated list of hashtags to exclude")
+opt_parser.add_option("-t", "--threshold", type=int, default=0, 
+    help="threshold below which to treat hashtags as 'other'")
+opt_parser.add_option("-r", "--reciprocal", action="store_true", default=False, 
+    help="add reciprocal links for each pair")
 opt_parser.add_option("-p", "--template", dest="template", type="str", 
     help="name of template in utils/template (default: graph.html)", default="graph.html")
-opt_parser.add_option('-k', '--keepother', action='store_true', default=False, 
-    help='include -OTHER tag in output for tags below threshold')
+opt_parser.add_option("-k", "--keepother", action="store_true", default=False, 
+    help="include -OTHER tag in output for tags below threshold")
 
 opts, args = opt_parser.parse_args()
-# prepare to serialize opts and args as json
-# converting opts to str produces string with single quotes,
-# but json requires double quotes
-optsdict = ast.literal_eval(str(opts))
-argsdict = ast.literal_eval(str(args))
 
 threshold = opts.threshold
 exclude = set(opts.exclude.lower().split(","))
@@ -121,34 +110,23 @@ profiler = CotagsProfiler({
     "threshold": threshold,
     "exclude": exclude,
     "reciprocal": reciprocal,
-    "keepother": keepother})
+    "keepother": keepother,
+    "graph": "undirected",
+    "field": "hashtag"})
     
-# gather counts for individual tags    
-for line in fileinput.input(args):
-    try:
-        tweet = json.loads(line)
-        profiler.process(tweet)
-    except ValueError as e:
-        sys.stderr.write("uhoh: %s\n" % e)
+profiler.gettweets(opts, args)
 
 data = profiler.report()
-
-optsdict["graph"] = "undirected"
-optsdict["field"] = "hashtag"
-
-if type(data) is dict:
-    data["opts"] = optsdict
-    data["args"] = argsdict
 
 profile = data["profile"]
 nodes = data["nodes"]
 
 if output == "csv":
     print d3output.nodeslinkcsv(nodes)
-elif output == 'json':
-    values = d3output.nodeslinktrees(profile, nodes, optsdict, argsdict)
+elif output == "json":
+    values = d3output.nodeslinktrees(profile, nodes)
     print {"profile": profile, "values": values}
-elif output == 'embed':
-    print d3output.embed(opts.template, d3output.nodeslinktrees(profile, nodes, optsdict, argsdict))
+elif output == "html":
+    print d3output.embed(opts.template, d3output.nodeslinktrees(profile, nodes))
 
 

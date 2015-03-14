@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <title>$TITLE$</title>
-<script src="../assets/d3js/d3.v3.min.js"></script>
+<script src="../assets/d3.v3.min.js"></script>
 <style>
 
 .axis text {
@@ -33,27 +33,27 @@
 <svg id="chart"></svg>
 <script>
 
-function type(d) { 
-    d.name = d3.time.format(tformat).parse(d.name)
-}
-
 var data = $DATA$;
 var metadata = data["metadata"];
 var values = data.values;
 var profile = data.profile;
+var opts = profile.opts;
+var tformat = opts.format;
+var tformatter = d3.time.format(tformat);
+var timezone = opts.timezone;
+var template = opts.template;
+var intervalStr = opts.intervalStr;
+var intervalLabel = opts.intervalLabel;
 
-tformat = data.opts.format;
-tformatter = d3.time.format(tformat);
-timezone = data.opts.timezone;
-template = data.opts.template;
-intervalStr = data.opts.intervalStr;
-intervalLabel = data.opts.intervalLabel;
-
-html = "<strong>" + metadata["title"] + "</strong><br/>Search: " + metadata["search"] + " | Timezone: " + timezone + " | Template: " + template + " | Interval: " + intervalLabel + "<br/>";
-html += profile.count + " tweets from " + profile.usercount + " users, including " + profile.retweetcount + " retweets (" + (profile.retweetcount / profile.count * 100).toFixed(2) + "%), "
-html += "and " + profile.geocount + " with geo (" + (profile.geocount / profile.count * 100).toFixed(2) + "%): "
-html += profile.earliest + " to " + profile.latest
+var html = "<strong>" + metadata["title"] + "</strong><br/>Search: " + metadata["search"] + " | Timezone: " + timezone + " | Template: " + template + " | Interval: " + intervalLabel + "<br/>";
+html += profile.count + " tweets from " + profile.usercount + " users, including " + profile.retweetcount + " retweets (" + (profile.retweetcount / profile.count * 100).toFixed(2) + "%), ";
+html += "and " + profile.geocount + " with geo (" + (profile.geocount / profile.count * 100).toFixed(2) + "%): ";
+html += profile.earliest + " to " + profile.latest;
 d3.select("#metadata").html(html);
+
+function type(d) { 
+    d.name = d3.time.format(tformat).parse(d.name);
+}
 
 var vlen = values.length;
 for (var i = 0; i < vlen; i++) {
@@ -71,19 +71,19 @@ var svg = d3.select("#chart")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 var x = d3.time.scale()
-.domain([
-    d3.min(values, function(d) {return d.name}), 
-    d3.max(values, function(d) {return d.name})
- ])
-.nice(d3.time.day)
-.range([0, width]);
+    .domain([
+        d3.min(values, function(d) {return d.name}), 
+        d3.max(values, function(d) {return d.name})
+     ])
+    .nice(d3.time.day)
+    .range([0, width]);
 
 var y = d3.scale.linear()
     .domain([0, d3.max(values, function(d) { return d.value; })])
     .range([height, 0]);
 
 var timespan = x.invert(width) - x.invert(0) // time span of x, in milliseconds
-var interval = data.opts.interval; // interval of datapoints, in milliseconds
+var interval = opts.interval; // interval of datapoints, in milliseconds
 var intervalCount = timespan / interval; // how many intervals in x
 var barWidth = width / intervalCount; // width of one interval, in pixels
 

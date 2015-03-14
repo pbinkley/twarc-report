@@ -2,40 +2,29 @@
 
 import optparse
 import re
-import json
-import urllib
-import fileinput
 import dateutil.parser
 from profiler import TimeProfiler
 import pytz
-import string
-from collections import OrderedDict
 import d3output
-import ast
 
 opt_parser = optparse.OptionParser()
-opt_parser.add_option('-t', '--timezone', type=str, default="", 
-    help='output timezone (e.g. "America/New_York" or "local"; default: UTC)')
+opt_parser.add_option("-t", "--timezone", type=str, default="", 
+    help="output timezone (e.g. 'America/New_York' or 'local'; default: UTC)")
 opt_parser.add_option("-w", "--maxwords", dest="maxwords", type="int", 
     help="maximum number of words to display (default: 25)", default=25)
 opt_parser.add_option("-i", "--interval", dest="intervalStr", type="str", 
-    help="interval for grouping timestamps, in seconds, minutes or hours, e.g. 15m (default: 1H)", 
+    help="interval for grouping timestamps, in seconds, minutes or hours, e.g. 15M (default: 1H)", 
     default="1H")
-opt_parser.add_option('-s', '--start', type=str, default=None, 
-    help='start date/time')
-opt_parser.add_option('-e', '--end', type=str, default=None, 
-    help='end date/time')
+opt_parser.add_option("-s", "--start", type=str, default=None, 
+    help="start date/time")
+opt_parser.add_option("-e", "--end", type=str, default=None, 
+    help="end date/time")
 opt_parser.add_option("-o", "--output", dest="output", type="str", 
-    help="embed | csv | json (default: embed)", default="embed")
+    help="html | csv | json (default: html)", default="html")
 opt_parser.add_option("-p", "--template", dest="template", type="str", 
     help="name of template in utils/template (default: wordcloud.html)", default="wordcloud.html")
 
 opts, args = opt_parser.parse_args()
-# prepare to serialize opts and args as json
-# converting opts to str produces string with single quotes,
-# but json requires double quotes
-optsdict = ast.literal_eval(str(opts))
-argsdict = ast.literal_eval(str(args))
 
 tzname = opts.timezone
 # determine output time zone
@@ -64,7 +53,7 @@ class WordcloudTimeProfiler(TimeProfiler):
     def __init__(self, opts):
         TimeProfiler.__init__(self, opts)
         self.timeslices = {}
-        self.stop_words = set(line.strip().lower() for line in open('stopwords/stop-words_english_6_en.txt'))
+        self.stop_words = set(line.strip().lower() for line in open("stopwords/stop-words_english_6_en.txt"))
 
     def process(self, tweet):
         created_at = dateutil.parser.parse(tweet["created_at"])
@@ -74,7 +63,7 @@ class WordcloudTimeProfiler(TimeProfiler):
             if not timeslice in self.timeslices:
                 self.timeslices[timeslice] = {}
             word_counts = self.timeslices[timeslice]
-            text = tweet['text']
+            text = tweet["text"]
             # remove hashtags and user names
             text = re.sub("(^|[^\w])[@#]\w*", "\g<1>", text)
             # remove urls
@@ -89,7 +78,7 @@ class WordcloudTimeProfiler(TimeProfiler):
                 if len(word) > 15: continue
                 if word in self.stop_words: continue
                 if word.startswith("rt"): continue
-                if not re.match('^[a-z]', word, re.IGNORECASE): continue
+                if not re.match("^[a-z]", word, re.IGNORECASE): continue
                 # remove final 's
                 word = re.sub("\'s$", "", word)
                 if len(word) > 0:
@@ -99,7 +88,6 @@ class WordcloudTimeProfiler(TimeProfiler):
         data = TimeProfiler.report(self)
         data["profile"]["start"] = str(self.start)
         data["profile"]["end"] = str(self.end)
-        # sort timeslices and store in OrderedDict so that the output will be sorted
         for value in data["values"]:
             thisslice = self.timeslices[value["name"]]
             # sort words by value
@@ -123,18 +111,9 @@ profiler = WordcloudTimeProfiler({
     "start": start,
     "end": end})
 
-for line in fileinput.input(args):
-    try:
-        tweet = json.loads(line)
-        profiler.process(tweet)
-    except ValueError as e:
-        sys.stderr.write("uhoh: %s\n" % e)
+profiler.gettweets(opts, args)
 
 data = profiler.report()
-
-if type(data) is dict:
-    data["opts"] = optsdict
-    data["args"] = argsdict
 
 if opts.output == "embed":
     d3output.embed(opts.template, data)

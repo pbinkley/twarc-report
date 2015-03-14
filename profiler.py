@@ -1,3 +1,4 @@
+import sys
 import dateutil
 import dateutil.parser # $ pip install python-dateutil
 import datetime
@@ -6,6 +7,11 @@ from collections import Counter
 import operator
 import re
 import d3output
+import fileinput
+import json
+import os
+import glob
+import ast
 
 class Profiler:
     def __init__(self, opts):
@@ -44,7 +50,7 @@ class Profiler:
                 self.imageurlcount = 0
             
         
-    def adduser(self, user):
+    def adduser(self, user, tweet):
         self.users[user] += 1
         
     def addurl(self, url):
@@ -68,7 +74,7 @@ class Profiler:
         if self.latest == "" or self.latest < self.created_at:
             self.latest = self.created_at
         user = tweet["user"]["screen_name"]
-        self.adduser(user)
+        self.adduser(user, tweet)
         if self.extended:
             # handle urls
             if "urls" in self.blocks or "topurls" in self.blocks:
@@ -80,24 +86,46 @@ class Profiler:
             # handle hashtags
             if "hashtags" in self.blocks or "tophashtags" in self.blocks:
                 if len(tweet["entities"]["hashtags"]) > 0:
-                    for tag in tweet['entities']['hashtags']:
+                    for tag in tweet["entities"]["hashtags"]:
                         # hashtags are not case sensitive, so lower() to dedupe
                         # or just leave it and accept dupes?
-                        self.addhashtag(tag['text'].lower())
+                        self.addhashtag(tag["text"].lower())
                     self.hashtagcount += 1
             
             # handle imageurls
             if "imageurls" in self.blocks or "topimageurls" in self.blocks:
-                if 'media' in tweet['entities']:
+                if "media" in tweet["entities"]:
                     hasimageurl = False
-                    for media in tweet['entities']['media']:
-                        if media['type'] == 'photo':
-                            self.addimageurl(media['media_url'])
+                    for media in tweet["entities"]["media"]:
+                        if media["type"] == "photo":
+                            self.addimageurl(media["media_url"])
                             hasimageurl = True
                     if hasimageurl:
                         self.imageurlcount += 1
 
-        
+    def gettweets(self, opts, args):
+        # prepare to serialize opts and args as json
+        # converting opts to str produces string with single quotes,
+        # but json requires double quotes
+        self.optsdict = ast.literal_eval(str(opts))
+        self.argsdict = ast.literal_eval(str(args))
+
+        # if args has one value, check whether it's a directory
+        if len(args) == 1 and os.path.isdir(args[0]):
+            # add path to metadata file and tweets
+            self.metadatafile = os.path.join(args[0] , "metadata.json")
+            args = glob.glob(os.path.join(args[0], "data/tweets/tweets-*.json"))
+        else:
+            # args must be files, so calculate path to metadata file based on 
+            # dir of first input file
+            self.metadatafile = os.path.join(os.path.dirname(args[0]), "metadata.json")
+        for line in fileinput.input(args):
+            try:
+                tweet = json.loads(line)
+                self.process(tweet)
+            except ValueError as e:
+                sys.stderr.write("uhoh: %s\n" % e)
+     
     def tops(self, list, title):
         # given a list of name-value pairs, return the top 10 pairs by value,
         # and a list of integers representing the percent of total value
@@ -136,7 +164,10 @@ class Profiler:
             "geocount": self.geocount,
             "earliest": local_earliest, 
             "latest": local_latest, 
-            "usercount": len(self.users)}
+            "usercount": len(self.users),
+            "opts": self.optsdict,
+            "args": self.argsdict,
+            "metadatafile": self.metadatafile}
         if self.extended:
             if "topusers" in self.blocks:
                 result.update(self.tops(self.users, "users"))
@@ -205,6 +236,10 @@ class LinkNodesProfiler(Profiler):
             self.nodeid += 1        
 
     def report(self):
+        if hasattr(self, "graph"):
+            self.optsdict["graph"] = self.graph
+        if hasattr(self, "field"):
+            self.optsdict["field"] = self.field
         profile = Profiler.report(self)
         # convert nodes dictionary to a list, sorted by id
         nodelistkeys = sorted(self.nodes, key=lambda w: self.nodes[w]["id"])
@@ -251,7 +286,7 @@ class TimeProfiler(Profiler):
         Profiler.process(self, tweet)
         created_at = dateutil.parser.parse(tweet["created_at"])
         local_dt = self.tz.normalize(created_at.astimezone(self.tz))
-        if self.intervalStr != '':
+        if self.intervalStr != "":
             if self.intervalUnit == "S":
                 local_dt = local_dt - datetime.timedelta(seconds=local_dt.second % int(self.intervalCount))
             elif self.intervalUnit == "M":
@@ -268,6 +303,9 @@ class TimeProfiler(Profiler):
         return result
             
     def report(self):
+        self.optsdict["interval"] = self.interval
+        self.optsdict["format"] = self.format
+        self.optsdict["intervalLabel"] = self.intervalLabel
         profile = Profiler.report(self)
         if self.output == "csv":
             if self.aggregate:

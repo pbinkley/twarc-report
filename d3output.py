@@ -33,11 +33,14 @@ def nodeslinks(threshold):
     
     print json.dump({"nodes": nodelist, "links": links})
 
-def nodeslinktrees(profile, nodes, opts, args):
+def nodeslinktrees(profile, nodes):
     # generate nodes json
     nodesoutput = []
     linksoutput = []
-    graph = opts["graph"]
+    if hasattr(profile["opts"], "graph"):
+        graph = profile["opts"]["graph"]
+    else:
+        graph = ""
     for node in nodes:
         if graph == "directed":
             title = " (" + str(node["tweetcount"]) + " tweet"
@@ -55,14 +58,14 @@ def nodeslinktrees(profile, nodes, opts, args):
         # generate links
         for targetname in node["links"].iterkeys():
             target = node["links"][targetname]
-            if target["count"] >= opts["threshold"]:
+            if target["count"] >= profile["opts"]["threshold"]:
                 linksoutput.append({
                     "source": node["id"], 
                     "target": target["id"], 
                     "value": target["count"]
                 })
 
-    return {"profile": profile, "nodes": nodesoutput, "links": linksoutput, "opts": opts, "args": args}
+    return {"profile": profile, "nodes": nodesoutput, "links": linksoutput}
 
 def namevaluecsv(data):
     csvout = StringIO.StringIO()
@@ -108,18 +111,23 @@ def valuejson(data):
 def embed(template, d3json):
     # load metadata.json if present
     # d3json["args"] contains filenams passed in, with wildcards resolved
-    metadata_file = os.path.join(os.path.dirname(d3json["args"][0]), "metadata.json")
+    if d3json["profile"]["metadatafile"]:
+        metadata_file = d3json["profile"]["metadatafile"]
+    else:
+        metadata_file = os.path.join(os.path.dirname(d3json["profile"]["args"][0]), "metadata.json")
     try:
         with open(metadata_file) as json_data:
             metadata = json.load(json_data)
             json_data.close()
     except:
-        sys.exit("Cannot read metadata file " + metadata_file)
+        #sys.exit("Cannot read metadata file " + metadata_file)
+        metadata = {"title": d3json["profile"]["args"][0] 
+                    + (" (+)" if len(d3json["profile"]["args"]) > 1 else "") }
     d3json["metadata"] = metadata
-    # generate html by replacing token
+    # generate html by replacing token in template
     template_file = os.path.join(os.path.dirname(__file__), "templates", template)
     with open (template_file, "r") as template:
         output = template.read()
-        output = output.replace('$TITLE$', metadata["title"])
-        output = output.replace('$DATA$', json.dumps(d3json))
+        output = output.replace("$TITLE$", metadata["title"])
+        output = output.replace("$DATA$", json.dumps(d3json))
         print output

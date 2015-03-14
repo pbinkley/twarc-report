@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <title>$TITLE$</title>
-<script src="../assets/d3js/d3.v3.min.js"></script>
+<script src="../assets/d3.v3.min.js"></script>
 <style type="text/css">
 
 div#sidebar {
@@ -141,11 +141,12 @@ ul { margin: 0; padding: 0; list-style-type: none;}
     var data = $DATA$;
     var metadata = data.metadata;
     var profile = data.profile;
-
-    var mode = data["opts"]["mode"];
-    var threshold = data["opts"]["threshold"];
-    var graph = data["opts"]["graph"];
-    var field = data["opts"]["field"];
+    var opts = profile.opts;
+    
+    var mode = opts["mode"];
+    var threshold = opts["threshold"];
+    var graph = opts["graph"];
+    var field = opts["field"];
     var links = data["links"];
     var nodes = data["nodes"];
     
