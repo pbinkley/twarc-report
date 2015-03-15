@@ -115,7 +115,7 @@ profiler.gettweets(opts, args)
 
 data = profiler.report()
 
-if opts.output == "embed":
+if opts.output == "html":
     d3output.embed(opts.template, data)
 else:
     print data
