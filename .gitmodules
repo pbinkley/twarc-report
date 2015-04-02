@@ -1,3 +1,3 @@
 [submodule "twarc"]
 	path = twarc
-	url = git@github.com:edsu/twarc.git
+	url = https://github.com/edsu/twarc.git
