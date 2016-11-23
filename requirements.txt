@@ -2,3 +2,4 @@ python-dateutil
 pytz
 tzlocal
 pysparklines
+requests_oauthlib

@@ -35,7 +35,16 @@ except:
     sys.exit("Cannot read metadata file " + metadatafile)
 
 sys.argv = ["", metadata["search"], tweets_dir]
-sys.path.append("twarc")
-sys.path.append("twarc/utils")
-import archive
-archive.main()
+
+# find twarc-archive.py on system path
+for dirname in os.environ["PATH"].split(os.pathsep):
+    candidate = os.path.join(dirname, "twarc-archive.py")
+    print candidate
+    if os.path.isfile(candidate):
+        break 
+    else:
+        candidate = ""
+try:
+    execfile(candidate)
+except:
+    sys.exit("Cannot run twarc-archive.py")

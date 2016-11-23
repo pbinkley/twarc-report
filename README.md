@@ -1,5 +1,5 @@
 # twarc-report
-Data conversions and examples for generating reports from [twarc](https://github.com/edsu/twarc) collections using tools such as D3.js
+Data conversions and examples for generating reports from [twarc](https://github.com/DocNow/twarc) collections using tools such as D3.js
 
 - [Requirements](#user-content-requirements)
 - [Getting Started](#user-content-getting-started)
@@ -31,16 +31,13 @@ All requirements may be installed with `pip install -r requirements.txt`
 * pytz - `pip install pytz`
 * tzlocal - `pip install tzlocal`
 * pysparklines - `pip install pysparklines`
+* requests_oauthlib - `pip install requests_oauthlib`
 
-Twarc-report also includes a copy of [twarc](https://github.com/edsu/twarc) as a 
-[submodule](http://git-scm.com/book/en/v2/Git-Tools-Submodules). If the `twarc`
-subdirectory in your clone is empty, you can populate it with the latest version
-of twarc like this (running in the twarc-report directory):
+Install `twarc` according to its instructions, i.e. with `pip install twarc`. 
+Run `twarc.py` once so
+that it can ask for your access token etc. (see twarc's readme). Make sure that `twarc-archive.py` 
+is on the system path.
 
-```
-git submodule init
-git submodule update
-```
 ## Getting Started
 
 - clone twarc-report to a local directory with your favorite Git client
@@ -53,7 +50,7 @@ git submodule update
 - run other scripts to generate various visualizations (see below)
 - run `./harvest.py projects/[yourproject]` whenever you want to update your harvest.
 
-Note that only tweets from the last 9 days or so are available from Twitter at 
+Note that only tweets from the last 7 days or so are available from Twitter at 
 any given time, so be sure to update your harvest accordingly to avoid gaps.
 
 ## Recommended Directory Structure
@@ -106,7 +103,7 @@ And then visit e.g. `http://localhost:8000/ProjectA/projectA-timebar.html`.
 
 ## Harvest
 
-The script `harvest.py` will use twarc's `archive.py` to start or update a harvest using a given
+The script `harvest.py` will use twarc's `twarc-archive.py` to start or update a harvest using a given
 search and stored in a given directory. The directory path is passed as the only parameter:
 
 ```
