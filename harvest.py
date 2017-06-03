@@ -5,6 +5,8 @@ import sys
 import argparse
 import json
 import errno
+import time
+from twarc import Twarc
 
 def make_sure_path_exists(path):
     try:
@@ -34,17 +36,34 @@ try:
 except:
     sys.exit("Cannot read metadata file " + metadatafile)
 
-sys.argv = ["", metadata["search"], tweets_dir]
-
-# find twarc-archive.py on system path
-for dirname in os.environ["PATH"].split(os.pathsep):
-    candidate = os.path.join(dirname, "twarc-archive.py")
-    print candidate
-    if os.path.isfile(candidate):
-        break 
-    else:
-        candidate = ""
+lastid = "0"
+lastidfile = os.path.join(data_dir, "last-id")
 try:
-    execfile(candidate)
+    with open(lastidfile) as lastid_data:
+        lastid = lastid_data.read().strip()
+        lastid_data.close()
 except:
-    sys.exit("Cannot run twarc-archive.py")
+    print("No last-id")
+
+timestr = time.strftime("%Y%m%d-%H%M%S")
+tweetsfile = os.path.join(tweets_dir, "tweets-" + timestr + ".json")
+output = open(tweetsfile, "w")
+
+t = Twarc() # it will get credentials from env vars or .twarc file
+tweetcount = 0
+lasttweet = lastid
+for tweet in t.search(metadata["search"], since_id=lastid):
+    # TODO implement other parameters for search
+    print(tweet, file=output)
+    if tweetcount == 0:
+        lasttweet = tweet["id_str"]
+    tweetcount = tweetcount + 1
+
+output.close()
+
+if lasttweet != lastid:
+    output = open(os.path.join(data_dir, "last-id"), "w")
+    print(lasttweet, file=output)
+    output.close()
+
+print("Harvested " + str(tweetcount) + " tweets (up to " + lasttweet + ") into " + tweetsfile)
