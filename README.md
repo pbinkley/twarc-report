@@ -34,17 +34,15 @@ All requirements may be installed with `pip install -r requirements.txt`
 * requests_oauthlib - `pip install requests_oauthlib`
 
 Install `twarc` according to its instructions, i.e. with `pip install twarc`. 
-Run `twarc.py` once so
-that it can ask for your access token etc. (see twarc's readme). Make sure that `twarc-archive.py` 
-is on the system path.
+Configure `twarc` according [its instructions](https://github.com/DocNow/twarc#configure).
 
 ## Getting Started
 
 - clone twarc-report to a local directory with your favorite Git client
-- install the requirements and populate the twarc submodule, as above
+- install the requirements, as above
 - create a `projects` subdirectory under twarc-report
-- create a project directory under `projects`, named appropriately
-- in the project directory create `metadata.json` and fill in the search you want to track
+- create a project directory under `projects`, named appropriately, e.g. `or2017`
+- in the project directory create `metadata.json` and fill in the search you want to track (see below)
 - in twarc-report, run `./harvest.py projects/[yourproject]` to harvest your tweets (this may take some time - hours or days for very large searches)
 - run `./reportprofile.py projects/[yourproject]` to see a summary of your harvest
 - run other scripts to generate various visualizations (see below)
