@@ -54,7 +54,7 @@ tweetcount = 0
 lasttweet = lastid
 for tweet in t.search(metadata["search"], since_id=lastid):
     # TODO implement other parameters for search
-    print(tweet, file=output)
+    output.write(tweet)
     if tweetcount == 0:
         lasttweet = tweet["id_str"]
     tweetcount = tweetcount + 1
@@ -63,7 +63,7 @@ output.close()
 
 if lasttweet != lastid:
     output = open(os.path.join(data_dir, "last-id"), "w")
-    print(lasttweet, file=output)
+    output.write(lasttweet)
     output.close()
 
 print("Harvested " + str(tweetcount) + " tweets (up to " + lasttweet + ") into " + tweetsfile)
