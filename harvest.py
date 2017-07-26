@@ -38,13 +38,14 @@ except:
 
 lastid = "0"
 lastidfile = os.path.join(data_dir, "last-id")
-try:
-    with open(lastidfile) as lastid_data:
-        lastid = lastid_data.read().strip()
-        lastid_data.close()
-except:
-    print("No last-id")
-
+if os.path.exist(lastidfile)
+    try:
+        with open(lastidfile) as lastid_data:
+            lastid = lastid_data.read().strip()
+            lastid_data.close()
+    except:
+        print("Cannot read last-id file " + lastidefile)
+`
 timestr = time.strftime("%Y%m%d-%H%M%S")
 tweetsfile = os.path.join(tweets_dir, "tweets-" + timestr + ".json")
 output = open(tweetsfile, "w")
