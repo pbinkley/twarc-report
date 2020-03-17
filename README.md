@@ -138,7 +138,7 @@ good presentation in the terminal.
 
 ## D3 visualizations
 
-Some utilities to generate [D3.js](http://d3js.org/) visualizations of aspects of a collection
+Some utilities to generate [D3.js](https://d3js.org/) visualizations of aspects of a collection
 of tweets are provided. Use "--output=json" or "--output=csv" to output the data for use with 
 other D3 examples, or "--help" for other options.
 
@@ -171,7 +171,7 @@ A bar chart timeline with arbitrary intervals, here five minutes:
 
     % d3times.py -a -t local -i 5M projects/nasa > projects/nasa/nasa-timebargraph.html
 
-[Examples](https://wallandbinkley.com/twarc/bill10/)
+[Examples](https://www.wallandbinkley.com/twarc/bill10/)
 
 The output timezone is specified by "-t"; the interval is specified by "-i",
 using the [standard
@@ -188,7 +188,7 @@ changes in frequency over time.
 
     % d3wordcloud.py -t local -i 1H projects/nasa > projects/nasa/nasa-wordcloud.html
     
-[Example](https://wallandbinkley.com/twarc/c4l15/animatedwordcloud.html)
+[Example](https://www.wallandbinkley.com/twarc/c4l15/animatedwordcloud.html)
     
 The optional "-t" control timezone and "-i" controls interval, as in `d3timebar.py`. Start and end 
 timestamps may be set with "-s" and "-e". 
@@ -205,14 +205,14 @@ explored; Mike Bostock's
 [Gallery](https://github.com/mbostock/d3/wiki/Gallery) is a good place
 to start. Here's a worked example, using Bostock's [Zoomable Timeline
 Area
-Chart](http://mbostock.github.io/d3/talk/20111018/area-gradient.html).
+Chart](https://mbostock.github.io/d3/talk/20111018/area-gradient.html).
 It assumes no knowledge of D3.
 
 First, look at the data input. In line 137 this example loads a csv file 
 
     d3.csv("flights-departed.csv", function(data) {
 
-The [csv file](http://mbostock.github.io/d3/talk/20111018/flights-departed.csv) looks like this: 
+The [csv file](https://mbostock.github.io/d3/talk/20111018/flights-departed.csv) looks like this: 
 
     date,value
     1988-01-01,12681
