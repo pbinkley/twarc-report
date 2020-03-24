@@ -4,7 +4,7 @@ import os
 import sys
 import json
 import csv
-import StringIO
+import io
 
 def nodeslinks(threshold):
 
@@ -31,7 +31,7 @@ def nodeslinks(threshold):
     for node in nodes:
         nodelist.append({"name": node})
     
-    print json.dump({"nodes": nodelist, "links": links})
+    print(json.dump({"nodes": nodelist, "links": links}))
 
 def nodeslinktrees(profile, nodes):
     # generate nodes json
@@ -53,10 +53,10 @@ def nodeslinktrees(profile, nodes):
                 title += "s"
             title += ")"
         nodesoutput.append({"name": node["name"], 
-            "title": unicode(node["name"]) + title})
+            "title": node["name"] + title})
        
         # generate links
-        for targetname in node["links"].iterkeys():
+        for targetname in node["links"].keys():
             target = node["links"][targetname]
             if target["count"] >= profile["opts"]["threshold"]:
                 linksoutput.append({
@@ -68,15 +68,15 @@ def nodeslinktrees(profile, nodes):
     return {"profile": profile, "nodes": nodesoutput, "links": linksoutput}
 
 def namevaluecsv(data):
-    csvout = StringIO.StringIO()
+    csvout = io.StringIO()
     csvwriter = csv.writer(csvout)
     csvwriter.writerow(["name", "value"])
-    for key, value in sorted(data.iteritems()):
+    for key, value in sorted(data.items()):
         csvwriter.writerow([key, value])
     return csvout.getvalue()
     
 def valuecsv(data):
-    csvout = StringIO.StringIO()
+    csvout = io.StringIO()
     csvwriter = csv.writer(csvout)
     csvwriter.writerow(["value"])
     for d in data:
@@ -86,7 +86,7 @@ def valuecsv(data):
 def nodeslinkcsv(data):
     # convert link-nodes objects into csv
     # e.g. {"A": {"B": 3, "C": 7}} to A,B,3 and A,C,7
-    csvout = StringIO.StringIO()
+    csvout = io.StringIO()
     csvwriter = csv.writer(csvout)
     csvwriter.writerow(["source", "target", "value"])
     for node in data:
@@ -98,7 +98,7 @@ def nodeslinkcsv(data):
 
 def namevaluejson(data):
     output = []
-    for key, value in sorted(data.iteritems()):
+    for key, value in sorted(data.items()):
         output.append({"name": key, "value": value})
     return output
     
@@ -130,4 +130,4 @@ def embed(template, d3json):
         output = template.read()
         output = output.replace("$TITLE$", metadata["title"])
         output = output.replace("$DATA$", json.dumps(d3json))
-        print output
+        print(output)

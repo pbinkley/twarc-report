@@ -3,3 +3,6 @@ pytz
 tzlocal
 pysparklines
 requests_oauthlib
+twarc
+networkx
+humanize

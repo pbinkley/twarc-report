@@ -39,7 +39,7 @@ sys.argv = ["", metadata["search"], tweets_dir]
 # find twarc-archive.py on system path
 for dirname in os.environ["PATH"].split(os.pathsep):
     candidate = os.path.join(dirname, "twarc-archive.py")
-    print candidate
+    print(candidate)
     if os.path.isfile(candidate):
         break 
     else:

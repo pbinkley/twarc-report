@@ -1,6 +1,5 @@
 import sys
-import dateutil
-import dateutil.parser # $ pip install python-dateutil
+from dateutil import parser
 import datetime
 import pytz # $ pip install pytz
 from collections import Counter
@@ -68,7 +67,7 @@ class Profiler:
             self.retweetcount += 1
         if tweet.get("geo") != None:
             self.geocount += 1
-        self.created_at = dateutil.parser.parse(tweet["created_at"])
+        self.created_at = parser.parse(tweet["created_at"])
         if self.earliest == "" or self.earliest > self.created_at:
             self.earliest = self.created_at
         if self.latest == "" or self.latest < self.created_at:
@@ -284,7 +283,7 @@ class TimeProfiler(Profiler):
 
     def process(self, tweet):
         Profiler.process(self, tweet)
-        created_at = dateutil.parser.parse(tweet["created_at"])
+        created_at = parser.parse(tweet["created_at"])
         local_dt = self.tz.normalize(created_at.astimezone(self.tz))
         if self.intervalStr != "":
             if self.intervalUnit == "S":

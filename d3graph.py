@@ -59,10 +59,10 @@ profile = data["profile"]
 nodes = data["nodes"]
 
 if output == "csv":
-    print d3output.nodeslinkcsv(nodes)
+    print(d3output.nodeslinkcsv(nodes))
 elif output == "json":
     values = d3output.nodeslinktrees(profile, nodes)
-    print {"profile": profile, "values": values}
+    print({"profile": profile, "values": values})
 elif output == "html":
-    print d3output.embed(opts.template, d3output.nodeslinktrees(profile, nodes))
+    print(d3output.embed(opts.template, d3output.nodeslinktrees(profile, nodes)))
 

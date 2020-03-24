@@ -1,5 +1,5 @@
 #!/bin/bash
-source venv/bin/activate
+source venv3/bin/activate
 export PATH=~/.local/bin:$PATH
 
 PROJECTDIR=$1

@@ -1,0 +1,89 @@
+## -*- coding: utf-8 -*-
+<%! import sparkline %>
+<%! from dateutil import parser %>
+
+<%def name="percentage(numerator, denominator)" filter="trim">
+  ${str("%.2f" % (float(numerator) / float(denominator) * 100.0))}%
+</%def>
+
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+<title>${data['title']}</title>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<style type="text/css">
+  td img {
+    max-width: 300px;
+  }
+  td:first-child {
+    text-align: right;
+    vertical-align: text-top;
+  }
+</style>
+</head>
+<body>
+
+  <h1>${data['title']}</h1>
+
+  <p>Search: ${data['search']}</p>
+
+<h2>Reports (note: some are large)</h2>
+
+<ul>
+% for report in data["reports"]:
+  % if report["report"] != "index":
+  <li><a href="${report['report']}.html">${report['report']}</a> (${report['size']})</li>
+  % endif
+% endfor
+</ul>
+
+<p><a href="tweet-ids.txt">Download tweet ids</a> (See <a href="https://github.com/DocNow/twarc#user-content-hydrate">twarc</a> for instructions on how to "hydrate" this list of ids to retrieve the original tweets)</p>
+
+<h2>Harvest statistics</h2>
+
+<table>
+<tr><td>Count:</td><td>${data['count']}</td></tr>
+
+<tr><td>Users:</td><td>${data['usercount']}</td></tr>
+<tr><td>User percentiles:</td><td>${sparkline.sparkify(data["userspercentiles"])}</td></tr>
+<tr><td></td><td>${str(data["userspercentiles"])}</td></tr>
+
+<tr><td>Has hashtag:</td><td>${"{:>9}".format(str(data["hashtagcount"]))} (${percentage(data["hashtagcount"], data["count"])})</td></tr>
+<tr><td>Hashtags:</td><td>${"{:>9}".format(str(data["hashtags"]))}</td></tr>
+<tr><td>Hashtags percentiles:</td><td>${sparkline.sparkify(data["hashtagspercentiles"])}</td></tr>
+<tr><td></td><td>${str(data["hashtagspercentiles"])}</td></tr>
+
+<tr><td>Has URL:</td><td>${"{:>9}".format(str(data["urlcount"]))} (${percentage(data["urlcount"], data["count"])})</td></tr>
+<tr><td>URLs:</td><td>${"{:>9}".format(str(data["urls"]))}</td></tr>
+<tr><td>URLs percentiles:</td><td>${sparkline.sparkify(data["urlspercentiles"])}</td></tr>
+<tr><td></td><td>${str(data["urlspercentiles"])}</td></tr>
+
+<tr><td>Has Image URL:</td><td>${"{:>9}".format(str(data["imageurlcount"]))} (${percentage(data["imageurlcount"], data["count"])})</td></tr>
+<tr><td>Image URLs:</td><td>${"{:>9}".format(str(data["imageurls"]))}</td></tr>
+<tr><td>Image URLs percentiles:</td><td>${sparkline.sparkify(data["imageurlspercentiles"])}</td></tr>
+<tr><td></td><td>${str(data["imageurlspercentiles"])}</td></tr>
+
+<tr><td>Retweets:</td><td>${"{:>9}".format(str(data["retweetcount"]))} (${percentage(data["retweetcount"], data["count"])})</td></tr>
+<tr><td>Geo:</td><td>${"{:>9}".format(str(data["geocount"]))} (${percentage(data["geocount"], data["count"])})</td></tr>
+<tr><td>Earliest:</td><td>${str(data["earliest"])}</td></tr>
+<tr><td>Latest:</td><td>${str(data["latest"])}</td></tr>
+<tr><td>Duration:</td><td>${str(parser.parse(data["latest"]) - parser.parse(data["earliest"]))}</td></tr>
+<tr><td>Top users:</td><td>${sparkline.sparkify([u["value"] for u in data["topusers"]])}</td></tr>
+% for user in data["topusers"]:
+<tr><td>${user["value"]}</td><td><a href='https://twitter.com/${user["name"]}'>${user["name"]}</a></td></tr>
+% endfor
+<tr><td>Top hashtags:</td><td>${sparkline.sparkify([u["value"] for u in data["tophashtags"]])}</td></tr>
+% for hashtag in data["tophashtags"]:
+<tr><td>${hashtag["value"]}</td><td><a href='https://twitter.com/hashtags/${hashtag["name"]}'>${hashtag["name"]}</a></td></tr>
+% endfor
+<tr><td>Top URLs:</td><td>${sparkline.sparkify([u["value"] for u in data["topurls"]])}</td></tr>
+% for url in data["topurls"]:
+<tr><td>${url["value"]}</td><td><a href='${url["name"]}'>${url["name"]}</a></td></tr>
+% endfor
+<tr><td>Top Image URLs:</td><td>${sparkline.sparkify([u["value"] for u in data["topimageurls"]])}
+<br>(Note: Firefox may not display these images, because of content blocking. You can turn off <a href="https://support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-desktop">Enhanced Tracking Protection</a> for this domain to allow the thumbnails to load. The links to the images should still work even when the thumbnails don't.)</td></tr>
+% for imageurl in data["topimageurls"]:
+<tr><td>${imageurl["value"]}</td><td><a href='${imageurl["name"]}'><img src='${imageurl["name"].replace("http:", "https:")}'></a></td></tr>
+% endfor
+</table>
+</body>

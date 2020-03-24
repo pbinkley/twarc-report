@@ -1,0 +1,50 @@
+## -*- coding: utf-8 -*-
+<%! import sparkline %>
+<%! from dateutil import parser %>
+
+<%def name="percentage(numerator, denominator)" filter="trim">
+    ${str("%.2f" % (float(numerator) / float(denominator) * 100.0))}%
+</%def>
+
+Count:                ${data['count']}
+
+Users:                ${data['usercount']}
+User percentiles:     ${sparkline.sparkify(data["userspercentiles"])}
+                      ${str(data["userspercentiles"])}
+
+Has hashtag:          ${"{:>9}".format(str(data["hashtagcount"]))} (${percentage(data["hashtagcount"], data["count"])})
+Hashtags:             ${"{:>9}".format(str(data["hashtags"]))}
+Hashtags percentiles: ${sparkline.sparkify(data["hashtagspercentiles"])}
+                  ${str(data["hashtagspercentiles"])}
+
+Has URL:              ${"{:>9}".format(str(data["urlcount"]))} (${percentage(data["urlcount"], data["count"])})
+URLs:                 ${"{:>9}".format(str(data["urls"]))}
+URLs percentiles:     ${sparkline.sparkify(data["urlspercentiles"])}
+                      ${str(data["urlspercentiles"])}
+
+Has Image URL:        ${"{:>9}".format(str(data["imageurlcount"]))} (${percentage(data["imageurlcount"], data["count"])})
+Image URLs:           ${"{:>9}".format(str(data["imageurls"]))}
+Image URLs percentiles: ${sparkline.sparkify(data["imageurlspercentiles"])}
+                        ${str(data["imageurlspercentiles"])}
+
+Retweets:             ${"{:>9}".format(str(data["retweetcount"]))} (${percentage(data["retweetcount"], data["count"])})
+Geo:                  ${"{:>9}".format(str(data["geocount"]))} (${percentage(data["geocount"], data["count"])})
+Earliest:             ${str(data["earliest"])}
+Latest:               ${str(data["latest"])}
+Duration:             ${str(parser.parse(data["latest"]) - parser.parse(data["earliest"]))}
+Top users:            ${sparkline.sparkify([u["value"] for u in data["topusers"]])}
+    % for user in data["topusers"]:
+      ${user["value"]} ${user["name"]}
+    % endfor
+Top hashtags:         ${sparkline.sparkify([u["value"] for u in data["tophashtags"]])}
+    % for hashtag in data["tophashtags"]:
+      ${hashtag["value"]} ${hashtag["name"]}
+    % endfor
+Top URLs:             ${sparkline.sparkify([u["value"] for u in data["topurls"]])}
+    % for url in data["topurls"]:
+      ${url["value"]} ${url["name"]}
+    % endfor
+Top Image URLs:       ${sparkline.sparkify([u["value"] for u in data["topimageurls"]])}
+    % for imageurl in data["topimageurls"]:
+      ${imageurl["value"]} ${imageurl["name"]}
+    % endfor
