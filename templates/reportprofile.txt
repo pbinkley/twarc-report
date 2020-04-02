@@ -27,7 +27,10 @@ Image URLs:           ${"{:>9}".format(str(data["imageurls"]))}
 Image URLs percentiles: ${sparkline.sparkify(data["imageurlspercentiles"])}
                         ${str(data["imageurlspercentiles"])}
 
+Originals:            ${"{:>9}".format(str(data["originalcount"]))} (${percentage(data["originalcount"], data["count"])})
 Retweets:             ${"{:>9}".format(str(data["retweetcount"]))} (${percentage(data["retweetcount"], data["count"])})
+Quotes:               ${"{:>9}".format(str(data["quotecount"]))} (${percentage(data["quotecount"], data["count"])})
+Replies:              ${"{:>9}".format(str(data["replycount"]))} (${percentage(data["replycount"], data["count"])})
 Geo:                  ${"{:>9}".format(str(data["geocount"]))} (${percentage(data["geocount"], data["count"])})
 Earliest:             ${str(data["earliest"])}
 Latest:               ${str(data["latest"])}

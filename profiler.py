@@ -32,7 +32,12 @@ class Profiler:
             
         # initialize 
         self.count = 0
+        self.typecounts = {"original": 0, "retweet": 0, "quote": 0, "reply": 0}
+        self.originalcount = 0
         self.retweetcount = 0
+        self.quotecount = 0
+        self.quoteandretweetcount = 0
+        self.replycount = 0
         self.geocount = 0
         self.earliest = ""
         self.latest = ""
@@ -63,10 +68,18 @@ class Profiler:
 
     def process(self, tweet):
         self.count += 1
+        tweettype = ""
         if "retweeted_status" in tweet:
-            self.retweetcount += 1
+            tweettype = "retweet"
+        elif tweet["is_quote_status"]:
+            tweettype = "quote"
+        elif tweet["in_reply_to_status_id"] != None:
+            tweettype = "reply"
+        else: tweettype = "original"
         if tweet.get("geo") != None:
             self.geocount += 1
+        self.typecounts[tweettype] += 1
+
         self.created_at = parser.parse(tweet["created_at"])
         if self.earliest == "" or self.earliest > self.created_at:
             self.earliest = self.created_at
@@ -159,7 +172,10 @@ class Profiler:
         local_earliest = self.tz.normalize(self.earliest.astimezone(self.tz)).strftime(self.labelFormat)
         local_latest = self.tz.normalize(self.latest.astimezone(self.tz)).strftime(self.labelFormat)
         result = {"count": self.count, 
-            "retweetcount": self.retweetcount, 
+            "originalcount": self.typecounts["original"], 
+            "retweetcount": self.typecounts["retweet"], 
+            "quotecount": self.typecounts["quote"], 
+            "replycount": self.typecounts["reply"], 
             "geocount": self.geocount,
             "earliest": local_earliest, 
             "latest": local_latest, 

@@ -63,7 +63,10 @@
 <tr><td>Image URLs percentiles:</td><td>${sparkline.sparkify(data["imageurlspercentiles"])}</td></tr>
 <tr><td></td><td>${str(data["imageurlspercentiles"])}</td></tr>
 
+<tr><td>Originals:</td><td>${"{:>9}".format(str(data["originalcount"]))} (${percentage(data["originalcount"], data["count"])})</td></tr>
 <tr><td>Retweets:</td><td>${"{:>9}".format(str(data["retweetcount"]))} (${percentage(data["retweetcount"], data["count"])})</td></tr>
+<tr><td>Quotes:</td><td>${"{:>9}".format(str(data["quotecount"]))} (${percentage(data["quotecount"], data["count"])})</td></tr>
+<tr><td>Replies:</td><td>${"{:>9}".format(str(data["replycount"]))} (${percentage(data["replycount"], data["count"])})</td></tr>
 <tr><td>Geo:</td><td>${"{:>9}".format(str(data["geocount"]))} (${percentage(data["geocount"], data["count"])})</td></tr>
 <tr><td>Earliest:</td><td>${str(data["earliest"])}</td></tr>
 <tr><td>Latest:</td><td>${str(data["latest"])}</td></tr>
