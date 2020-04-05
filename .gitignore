@@ -1,7 +1,9 @@
 # twarc harvest project directories
 projects/
 credentials
+github-credentials
 venv/
+venv3/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
